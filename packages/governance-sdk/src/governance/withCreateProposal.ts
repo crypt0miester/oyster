@@ -40,8 +40,9 @@ export const withCreateProposal = async (
   useDenyOption: boolean,
   payer: PublicKey,
   voterWeightRecord?: PublicKey,
+  proposalSeed?: PublicKey
 ) => {
-  const proposalSeed = new Keypair().publicKey;
+  const optionalProposalSeed = proposalSeed ?? new Keypair().publicKey;
 
   const args = new CreateProposalArgs({
     name,
@@ -50,13 +51,13 @@ export const withCreateProposal = async (
     voteType,
     options,
     useDenyOption,
-    proposalSeed,
+    proposalSeed: optionalProposalSeed,
   });
   const data = Buffer.from(
     serialize(getGovernanceInstructionSchema(programVersion), args),
   );
 
-  let proposalSeedBuffer = proposalSeed.toBuffer();
+  let proposalSeedBuffer = optionalProposalSeed.toBuffer();
 
   if (programVersion <= PROGRAM_VERSION_V2) {
     if (proposalIndex === undefined) {
