@@ -1,6 +1,6 @@
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
-  Token,
+  getAssociatedTokenAddress,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
 import {
@@ -78,7 +78,7 @@ export class BenchBuilder {
     connection?: Connection | undefined,
     programId?: PublicKey | undefined,
   ) {
-    connection = connection ?? new Connection(rpcEndpoint, 'recent');
+    connection = connection ?? new Connection(rpcEndpoint, 'processed');
     programId = programId ?? rpcProgramId;
 
     const programVersion = await getGovernanceProgramVersion(
@@ -273,11 +273,12 @@ export class RealmBuilder {
   }
 
   async withdrawGoverningTokens() {
-    const ataPk = await Token.getAssociatedTokenAddress(
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-      TOKEN_PROGRAM_ID,
+    const ataPk = await getAssociatedTokenAddress(
       this.communityMintPk,
       this.bench.walletPk,
+      false,
+      TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
     );
 
     await withWithdrawGoverningTokens(
