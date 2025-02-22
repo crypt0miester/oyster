@@ -10,13 +10,14 @@ export const withCreateAssociatedTokenAccount = async (
   instructions: TransactionInstruction[],
   mintPk: PublicKey,
   ownerPk: PublicKey,
-  payerPk: PublicKey
+  payerPk: PublicKey,
+  tokenProgram: PublicKey = TOKEN_PROGRAM_ID
 ) => {
   const ataPk = await getAssociatedTokenAddress(
     mintPk,
     ownerPk, // owner
     false,
-    TOKEN_PROGRAM_ID,
+    tokenProgram,
     ASSOCIATED_TOKEN_PROGRAM_ID,
   )
 
@@ -26,7 +27,7 @@ export const withCreateAssociatedTokenAccount = async (
       ataPk,
       ownerPk,
       mintPk,
-      TOKEN_PROGRAM_ID,
+      tokenProgram,
       ASSOCIATED_TOKEN_PROGRAM_ID,
     )
   )
