@@ -952,6 +952,21 @@ function createGovernanceAccountSchema(accountVersion: number) {
         ],
       },
     ],
+    [
+      ProposalTransactionBuffer,
+      {
+        kind: 'struct',
+        fields: [
+          ['accountType', 'u8'],
+          ['communityMint', 'pubkey'],
+          ['config', RealmConfig],
+          ['reserved', [6]],
+          ['votingProposalCount', 'u16'],
+          ['authority', { kind: 'option', type: 'pubkey' }],
+          ['name', 'string'],
+        ],
+      },
+    ],
     ...createGovernanceStructSchema(undefined, accountVersion),
   ]);
 }

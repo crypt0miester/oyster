@@ -36,6 +36,9 @@ export enum GovernanceAccountType {
   TokenGovernanceV2 = 21,
   SignatoryRecordV2 = 22,
   ProposalDeposit = 23,
+  RequiredSignatory = 24,
+  ProposalVersionedTransaction = 25,
+  ProposalTransactionBuffer = 26
 }
 
 export interface GovernanceAccount {
@@ -974,8 +977,8 @@ export class Proposal {
     const baseVotingTime = this.isPreVotingState()
       ? governance.config.baseVotingTime
       : (this.votingAt?.toNumber() ?? 0) +
-        governance.config.baseVotingTime -
-        unixTimestampInSeconds;
+      governance.config.baseVotingTime -
+      unixTimestampInSeconds;
 
     return baseVotingTime + governance.config.votingCoolOffTime;
   }
@@ -1266,6 +1269,371 @@ export class ProposalTransaction {
   }
 }
 
+
+export class ProposalTransactionBuffer {
+  accountType: GovernanceAccountType;
+  proposal: PublicKey;
+  creator: PublicKey;
+  bufferIndex: number;
+  finalBufferHash: Uint8Array;
+  finalBufferSize: number;
+  buffer: Uint8Array;
+
+  constructor(args: {
+    accountType: GovernanceAccountType;
+    proposal: PublicKey;
+    creator: PublicKey;
+    bufferIndex: number;
+    finalBufferHash: Uint8Array;
+    finalBufferSize: number;
+    buffer: Uint8Array;
+  }) {
+    // Validate buffer hash length
+    if (args.finalBufferHash.length !== 32) {
+      throw new Error('Final buffer hash must be 32 bytes');
+    }
+
+    this.accountType = args.accountType;
+    this.proposal = args.proposal;
+    this.creator = args.creator;
+    this.bufferIndex = args.bufferIndex;
+    this.finalBufferHash = args.finalBufferHash;
+    this.finalBufferSize = args.finalBufferSize;
+    this.buffer = args.buffer;
+  }
+
+  validateBuffer(): boolean {
+    return this.buffer.length === this.finalBufferSize;
+  }
+
+  // Method to serialize the buffer for on-chain storage
+  serialize(): Uint8Array {
+    // Implementation would depend on your specific serialization needs
+    // This is a basic example
+    const serialized = new Uint8Array(this.buffer.length + 40); // 40 bytes for metadata
+    let offset = 0;
+
+    // Write metadata
+    serialized.set([this.accountType], offset);
+    offset += 1;
+
+    serialized.set(this.proposal.toBytes(), offset);
+    offset += 32;
+
+    serialized.set([this.bufferIndex], offset);
+    offset += 1;
+
+    serialized.set(new Uint8Array(new Uint16Array([this.finalBufferSize]).buffer), offset);
+    offset += 2;
+
+    // Write buffer content
+    serialized.set(this.buffer, offset);
+
+    return serialized;
+  }
+}
+
+// Enum for transaction execution status
+export enum TransactionExecutionStatus {
+  None = 'None',
+  Success = 'Success',
+  Error = 'Error'
+}
+
+// Interface for address table lookups
+export interface VersionedTransactionMessageAddressTableLookup {
+  accountKey: PublicKey;
+  writableIndexes: number[];
+  readonlyIndexes: number[];
+}
+export class ProposalCompiledInstruction {
+  programIdIndex: number;
+  accountIndexes: number[];
+  data: Uint8Array;
+
+  constructor(args: {
+    programIdIndex: number;
+    accountIndexes: number[];
+    data: Uint8Array;
+  }) {
+    if (args.programIdIndex > 255) {
+      throw new Error('Program ID index must be a u8 (0-255)');
+    }
+
+    args.accountIndexes.forEach(index => {
+      if (index > 255) {
+        throw new Error('Account indexes must be u8 (0-255)');
+      }
+    });
+    this.programIdIndex = args.programIdIndex;
+    this.accountIndexes = args.accountIndexes;
+    this.data = args.data;
+  }
+
+  getProgramIdIndex(): number {
+    return this.programIdIndex;
+  }
+
+  getAccountIndexes(): number[] {
+    return this.accountIndexes;
+  }
+
+  getData(): Uint8Array {
+    return this.data;
+  }
+
+  serialize(): Uint8Array {
+    // Layout:
+    // 1 byte - programIdIndex (u8)
+    // 4 bytes - accountIndexes length (u32)
+    // N bytes - accountIndexes array
+    // 4 bytes - data length (u32)
+    // M bytes - data array
+    const buffer = new Uint8Array(1 + 4 + this.accountIndexes.length + 4 + this.data.length);
+    let offset = 0;
+
+    // Write programIdIndex
+    buffer[offset] = this.programIdIndex;
+    offset += 1;
+
+    // Write accountIndexes length (u32)
+    buffer[offset++] = this.accountIndexes.length & 0xff;
+    buffer[offset++] = (this.accountIndexes.length >> 8) & 0xff;
+    buffer[offset++] = (this.accountIndexes.length >> 16) & 0xff;
+    buffer[offset++] = (this.accountIndexes.length >> 24) & 0xff;
+
+    // Write accountIndexes
+    buffer.set(this.accountIndexes, offset);
+    offset += this.accountIndexes.length;
+
+    // Write data length (u32)
+    buffer[offset++] = this.data.length & 0xff;
+    buffer[offset++] = (this.data.length >> 8) & 0xff;
+    buffer[offset++] = (this.data.length >> 16) & 0xff;
+    buffer[offset++] = (this.data.length >> 24) & 0xff;
+
+    // Write data
+    buffer.set(this.data, offset);
+
+    return buffer;
+  }
+}
+
+// Class for transaction message
+export class ProposalTransactionMessage {
+  numSigners: number;
+  numWritableSigners: number;
+  numWritableNonSigners: number;
+  accountKeys: PublicKey[];
+  instructions: ProposalCompiledInstruction[];
+  addressTableLookups: VersionedTransactionMessageAddressTableLookup[];
+
+  constructor(args: {
+    numSigners: number,
+    numWritableSigners: number,
+    numWritableNonSigners: number,
+    accountKeys: PublicKey[],
+    instructions: ProposalCompiledInstruction[],
+    addressTableLookups: VersionedTransactionMessageAddressTableLookup[]
+  }) {
+    if (args.numSigners > 255) throw new Error('Number of signers must be a u8 (0-255)');
+    if (args.numWritableSigners > 255) throw new Error('Number of writable signers must be a u8 (0-255)');
+    if (args.numWritableNonSigners > 255) throw new Error('Number of writable non-signers must be a u8 (0-255)');
+
+    this.numSigners = args.numSigners;
+    this.numWritableSigners = args.numWritableSigners;
+    this.numWritableNonSigners = args.numWritableNonSigners;
+    this.accountKeys = args.accountKeys;
+    this.instructions = args.instructions;
+    this.addressTableLookups = args.addressTableLookups;
+  }
+  getNumSigners(): number { return this.numSigners; }
+  getNumWritableSigners(): number { return this.numWritableSigners; }
+  getNumWritableNonSigners(): number { return this.numWritableNonSigners; }
+  getAccountKeys(): PublicKey[] { return this.accountKeys; }
+  getInstructions(): ProposalCompiledInstruction[] { return this.instructions; }
+  getAddressTableLookups(): VersionedTransactionMessageAddressTableLookup[] { return this.addressTableLookups; }
+
+  serialize(): Uint8Array {
+    // Calculate total size needed
+    const accountKeysSize = this.accountKeys.length * 32; // Each PublicKey is 32 bytes
+    const instructionsSize = this.instructions.reduce(
+      (sum, instruction) => sum + instruction.serialize().length,
+      0
+    );
+    const addressTableLookupsSize = this.addressTableLookups.reduce(
+      (sum, lookup) => sum + 32 + 4 + lookup.writableIndexes.length + 4 + lookup.readonlyIndexes.length,
+      0
+    );
+
+    // 3 bytes for the header numbers (numSigners, numWritableSigners, numWritableNonSigners)
+    // 4 bytes for number of account keys
+    // 4 bytes for number of instructions
+    // 4 bytes for number of address table lookups
+    const headerSize = 3 + 4 + 4 + 4;
+    const totalSize = headerSize + accountKeysSize + instructionsSize + addressTableLookupsSize;
+
+    const buffer = new Uint8Array(totalSize);
+    let offset = 0;
+
+    // Write header
+    buffer[offset++] = this.numSigners;
+    buffer[offset++] = this.numWritableSigners;
+    buffer[offset++] = this.numWritableNonSigners;
+
+    // Write account keys length (u32)
+    buffer[offset++] = this.accountKeys.length & 0xff;
+    buffer[offset++] = (this.accountKeys.length >> 8) & 0xff;
+    buffer[offset++] = (this.accountKeys.length >> 16) & 0xff;
+    buffer[offset++] = (this.accountKeys.length >> 24) & 0xff;
+
+    // Write account keys
+    for (const key of this.accountKeys) {
+      buffer.set(key.toBytes(), offset);
+      offset += 32;
+    }
+
+    // Write instructions length (u32)
+    buffer[offset++] = this.instructions.length & 0xff;
+    buffer[offset++] = (this.instructions.length >> 8) & 0xff;
+    buffer[offset++] = (this.instructions.length >> 16) & 0xff;
+    buffer[offset++] = (this.instructions.length >> 24) & 0xff;
+
+    // Write instructions
+    for (const instruction of this.instructions) {
+      const serializedInstruction = instruction.serialize();
+      buffer.set(serializedInstruction, offset);
+      offset += serializedInstruction.length;
+    }
+
+    // Write address table lookups length (u32)
+    buffer[offset++] = this.addressTableLookups.length & 0xff;
+    buffer[offset++] = this.addressTableLookups.length >> 8 & 0xff;
+    buffer[offset++] = this.addressTableLookups.length >> 16 & 0xff;
+    buffer[offset++] = this.addressTableLookups.length >> 24 & 0xff;
+
+    // Write address table lookups
+    for (const lookup of this.addressTableLookups) {
+      // Write account key
+      buffer.set(lookup.accountKey.toBytes(), offset);
+      offset += 32;
+
+      // Write writable indexes
+      buffer[offset++] = lookup.writableIndexes.length & 0xff;
+      buffer[offset++] = (lookup.writableIndexes.length >> 8) & 0xff;
+      buffer[offset++] = (lookup.writableIndexes.length >> 16) & 0xff;
+      buffer[offset++] = (lookup.writableIndexes.length >> 24) & 0xff;
+      buffer.set(new Uint8Array(lookup.writableIndexes), offset);
+      offset += lookup.writableIndexes.length;
+
+      // Write readonly indexes
+      buffer[offset++] = lookup.readonlyIndexes.length & 0xff;
+      buffer[offset++] = (lookup.readonlyIndexes.length >> 8) & 0xff;
+      buffer[offset++] = (lookup.readonlyIndexes.length >> 16) & 0xff;
+      buffer[offset++] = (lookup.readonlyIndexes.length >> 24) & 0xff;
+      buffer.set(new Uint8Array(lookup.readonlyIndexes), offset);
+      offset += lookup.readonlyIndexes.length;
+    }
+
+    return buffer;
+  }
+}
+
+// Main class for versioned transaction
+export class ProposalVersionedTransaction {
+  accountType: GovernanceAccountType;
+  proposal: PublicKey;
+  optionIndex: number;
+  transactionIndex: number;
+  executionIndex: number;
+  executedAt: number | null;
+  executionStatus: TransactionExecutionStatus;
+  ephemeralSignerBumps: number[];
+  message: ProposalTransactionMessage;
+
+  constructor(args: {
+    accountType: GovernanceAccountType,
+    proposal: PublicKey,
+    optionIndex: number,
+    transactionIndex: number,
+    executionIndex: number,
+    executedAt: number | null,
+    executionStatus: TransactionExecutionStatus,
+    ephemeralSignerBumps: number[],
+    message: ProposalTransactionMessage
+  }) {
+    if (args.optionIndex > 255) throw new Error('Option index must be a u8 (0-255)');
+    if (args.transactionIndex > 65535) throw new Error('Transaction index must be a u16 (0-65535)');
+    if (args.executionIndex > 255) throw new Error('Execution index must be a u8 (0-255)');
+
+    args.ephemeralSignerBumps.forEach(bump => {
+      if (bump > 255) throw new Error('Ephemeral signer bumps must be u8 (0-255)');
+    });
+    this.accountType = args.accountType;
+    this.proposal = args.proposal;
+    this.optionIndex = args.optionIndex;
+    this.transactionIndex = args.transactionIndex;
+    this.executionIndex = args.executionIndex;
+    this.executedAt = args.executedAt;
+    this.executionStatus = args.executionStatus;
+    this.ephemeralSignerBumps = args.ephemeralSignerBumps;
+    this.message = args.message;
+  }
+
+  getAccountType(): GovernanceAccountType { return this.accountType; }
+  getProposal(): PublicKey { return this.proposal; }
+  getOptionIndex(): number { return this.optionIndex; }
+  getTransactionIndex(): number { return this.transactionIndex; }
+  getExecutionIndex(): number { return this.executionIndex; }
+  getExecutedAt(): number | null { return this.executedAt; }
+  getExecutionStatus(): TransactionExecutionStatus { return this.executionStatus; }
+  getEphemeralSignerBumps(): number[] { return this.ephemeralSignerBumps; }
+  getMessage(): ProposalTransactionMessage { return this.message; }
+
+  isExecuted(): boolean {
+    return this.executionStatus === TransactionExecutionStatus.Success;
+  }
+
+  hasError(): boolean {
+    return this.executionStatus === TransactionExecutionStatus.Error;
+  }
+
+  getAllSigners(): PublicKey[] {
+    return this.message.getAccountKeys().slice(0, this.message.getNumSigners());
+  }
+
+  getWritableAccounts(): PublicKey[] {
+    const writableCount = this.message.getNumWritableSigners() +
+      this.message.getNumWritableNonSigners();
+    return this.message.getAccountKeys().slice(0, writableCount);
+  }
+
+  // Serialize the transaction
+  serialize(): Uint8Array {
+    const accountKeysLength = this.message.getAccountKeys().length * 32; // 32 bytes per pubkey
+    const instructionsLength = this.message.getInstructions().reduce(
+      (acc, inst) => acc + inst.serialize().length, 0
+    );
+
+    const buffer = new Uint8Array(
+      1 + // account type
+      32 + // proposal pubkey
+      1 + // option index
+      2 + // transaction index
+      1 + // execution index
+      8 + // executed at
+      1 + // execution status
+      1 + this.ephemeralSignerBumps.length + // bumps
+      3 + // message header (num_signers, num_writable_signers, num_writable_non_signers)
+      accountKeysLength +
+      instructionsLength
+    );
+
+    // Actual serialization implementation would go here
+    return buffer;
+  }
+}
+
 export async function getProposalTransactionAddress(
   programId: PublicKey,
   programVersion: number,
@@ -1282,16 +1650,16 @@ export async function getProposalTransactionAddress(
   const seeds =
     programVersion === PROGRAM_VERSION_V1
       ? [
-          Buffer.from(GOVERNANCE_PROGRAM_SEED),
-          proposal.toBuffer(),
-          instructionIndexBuffer,
-        ]
+        Buffer.from(GOVERNANCE_PROGRAM_SEED),
+        proposal.toBuffer(),
+        instructionIndexBuffer,
+      ]
       : [
-          Buffer.from(GOVERNANCE_PROGRAM_SEED),
-          proposal.toBuffer(),
-          optionIndexBuffer,
-          instructionIndexBuffer,
-        ];
+        Buffer.from(GOVERNANCE_PROGRAM_SEED),
+        proposal.toBuffer(),
+        optionIndexBuffer,
+        instructionIndexBuffer,
+      ];
 
   const [instructionAddress] = await PublicKey.findProgramAddress(
     seeds,
@@ -1375,4 +1743,85 @@ export async function getProposalDepositAddress(
   );
 
   return proposalDepositAddress;
+}
+
+
+export function getEphemeralSignerPda({
+  transactionProposalPda,
+  transactionIndex,
+  ephemeralSignerIndex,
+  programId,
+}: {
+  transactionProposalPda: PublicKey;
+  transactionIndex: number;
+  ephemeralSignerIndex: number;
+  programId: PublicKey;
+}): [PublicKey, number] {
+  let transactionIndexBuffer = Buffer.alloc(2);
+  transactionIndexBuffer.writeInt16LE(transactionIndex, 0);
+
+  let ephemeralSignerIndexBuffer = Buffer.alloc(1);
+  ephemeralSignerIndexBuffer.writeUInt8(ephemeralSignerIndex);
+
+  return PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("version_transaction"),
+      transactionProposalPda.toBytes(),
+      Buffer.from("ephemeral_signer"),
+      transactionIndexBuffer,
+      ephemeralSignerIndexBuffer,
+    ],
+    programId
+  );
+}
+
+export async function getProposalVersionedTransactionAddress(
+  programId: PublicKey,
+  proposal: PublicKey,
+  optionIndex: number,
+  transactionIndex: number,
+) {
+  let optionIndexBuffer = Buffer.alloc(1);
+  optionIndexBuffer.writeUInt8(optionIndex);
+
+  let transactionIndexBuffer = Buffer.alloc(2);
+  transactionIndexBuffer.writeInt16LE(transactionIndex, 0);
+
+  const seeds = [
+    Buffer.from("version_transaction"),
+    proposal.toBuffer(),
+    optionIndexBuffer,
+    transactionIndexBuffer,
+  ];
+
+  const [instructionAddress] = await PublicKey.findProgramAddress(
+    seeds,
+    programId,
+  );
+
+  return instructionAddress;
+}
+
+export async function getProposalTransactionBufferAddress(
+  programId: PublicKey,
+  proposal: PublicKey,
+  creator: PublicKey,
+  bufferIndex: number,
+) {
+  let bufferIndexBuffer = Buffer.alloc(1);
+  bufferIndexBuffer.writeUInt8(bufferIndex, 0);
+
+  const seeds = [
+    Buffer.from("transaction_buffer"),
+    proposal.toBuffer(),
+    creator.toBuffer(),
+    bufferIndexBuffer,
+  ];
+
+  const [instructionAddress] = await PublicKey.findProgramAddress(
+    seeds,
+    programId,
+  );
+
+  return instructionAddress;
 }
