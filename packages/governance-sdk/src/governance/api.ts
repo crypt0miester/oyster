@@ -343,7 +343,7 @@ export async function getGovernanceAccounts<TAccount extends GovernanceAccount>(
       accountType,
     );
 
-    all = all.concat(accounts);
+    all.push(...accounts);
   }
 
   return all;
