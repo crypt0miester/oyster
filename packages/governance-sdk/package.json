@@ -1,6 +1,6 @@
 {
   "name": "@realms-today/spl-governance",
-  "version": "0.3.31",
+  "version": "0.3.32",
   "description": "SPL Governance Client API",
   "author": "Solana Maintainers <maintainers@solana.foundation>",
   "homepage": "https://github.com/solana-labs/oyster/blob/main/packages/governance-sdk/README.md",
