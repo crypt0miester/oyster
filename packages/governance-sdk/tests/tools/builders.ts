@@ -22,9 +22,15 @@ import {
   Vote,
   withAddSignatory,
   withCastVote,
+  withCloseTransactionBuffer,
   withCreateGovernance,
   withCreateProposal,
+  withCreateTransactionBuffer,
   withDepositGoverningTokens,
+  withExecuteVersionedTransaction,
+  withExtendTransactionBuffer,
+  withInsertVersionedTransaction,
+  withInsertVersionedTransactionFromBuffer,
   withRefundProposalDeposit,
   withRelinquishVote,
   withRevokeGoverningTokens,
@@ -38,6 +44,10 @@ import {
   GoverningTokenConfigAccountArgs,
   GoverningTokenType,
   MintMaxVoteWeightSource,
+  ProposalTransactionBuffer,
+  ProposalTransactionMessage,
+  ProposalVersionedTransaction,
+  TransactionExecutionStatus,
   VoteThreshold,
   VoteThresholdType,
   VoteTipping,
@@ -145,6 +155,9 @@ export class RealmBuilder {
   proposalPk: PublicKey;
   signatoryPk: PublicKey | undefined;
   voteRecordPk: PublicKey;
+
+  proposalTransactionBufferPk: PublicKey;
+  proposalVersionedTxPk: PublicKey;
 
   constructor(bench: BenchBuilder) {
     this.bench = bench;
@@ -545,5 +558,156 @@ export class RealmBuilder {
   async sendTx() {
     await this.bench.sendTx();
     return this;
+  }
+
+  async withTransactionBuffer(
+    bufferIndex: number = 0,
+    finalBufferHash: Uint8Array = new Uint8Array(32), // 32-byte zero hash
+    finalBufferSize: number = 100,
+    buffer: Uint8Array,
+  ) {
+    this.proposalTransactionBufferPk = await withCreateTransactionBuffer(
+      this.bench.instructions,
+      this.bench.programId,
+      this.governancePk,
+      this.proposalPk,
+      this.communityOwnerRecordPk,
+      this.bench.walletPk,
+      this.bench.walletPk,
+      bufferIndex,
+      finalBufferHash,
+      finalBufferSize,
+      buffer,
+    );
+    return this;
+  }
+
+  async extendTransactionBuffer(
+    bufferIndex: number = 0,
+    buffer: Uint8Array,
+  ) {
+    await withExtendTransactionBuffer(
+      this.bench.instructions,
+      this.bench.programId,
+      this.governancePk,
+      this.proposalPk,
+      this.bench.walletPk,
+      bufferIndex,
+      buffer,
+    );
+    return this;
+  }
+
+  async closeTransactionBuffer(bufferIndex: number = 0) {
+    await withCloseTransactionBuffer(
+      this.bench.instructions,
+      this.bench.programId,
+      this.governancePk,
+      this.proposalPk,
+      this.communityOwnerRecordPk,
+      this.bench.walletPk,
+      this.bench.walletPk,
+      bufferIndex,
+    );
+    return this;
+  }
+
+  async withVersionedTransactionFromBuffer(
+    optionIndex: number = 0,
+    ephemeralSigners: number = 0,
+    transactionIndex: number = 0,
+    bufferIndex: number = 0,
+  ) {
+    this.proposalVersionedTxPk = await withInsertVersionedTransactionFromBuffer(
+      this.bench.instructions,
+      this.bench.programId,
+      this.governancePk,
+      this.proposalPk,
+      this.communityOwnerRecordPk,
+      this.bench.walletPk,
+      this.bench.walletPk,
+      optionIndex,
+      ephemeralSigners,
+      transactionIndex,
+      bufferIndex,
+    );
+    return this;
+  }
+
+  async withVersionedTransaction(
+    optionIndex: number = 0,
+    ephemeralSigners: number | undefined,
+    transactionIndex: number = 0,
+    transactionMessage: Uint8Array,
+  ) {
+    this.proposalVersionedTxPk = await withInsertVersionedTransaction(
+      this.bench.instructions,
+      this.bench.programId,
+      this.governancePk,
+      this.proposalPk,
+      this.communityOwnerRecordPk,
+      this.bench.walletPk,
+      this.bench.walletPk,
+      optionIndex,
+      ephemeralSigners,
+      transactionIndex,
+      transactionMessage,
+    );
+    return this;
+  }
+
+  async executeVersionedTransaction() {
+    await withExecuteVersionedTransaction(
+      this.bench.instructions,
+      this.bench.programId,
+      this.governancePk,
+      this.proposalPk,
+      this.proposalVersionedTxPk,
+    );
+    return this;
+  }
+
+  // Helper method to get account data (you might need to implement these in your SDK)
+  async getTransactionBuffer(bufferPk: PublicKey): Promise<ProposalTransactionBuffer> {
+    // Placeholder - implement actual fetch from chain
+    return this.bench.connection.getAccountInfo(bufferPk).then(account => {
+      // Deserialize account data into ProposalTransactionBuffer
+      // This is a simplification - you'll need proper deserialization
+      return new ProposalTransactionBuffer({
+        accountType: 0, // Adjust as needed
+        proposal: this.proposalPk,
+        creator: this.bench.walletPk,
+        bufferIndex: 0,
+        finalBufferHash: new Uint8Array(32),
+        finalBufferSize: 0,
+        buffer: new Uint8Array(),
+      });
+    });
+  }
+
+  async getVersionedTransaction(txPk: PublicKey): Promise<ProposalVersionedTransaction> {
+    // Placeholder - implement actual fetch from chain
+    return this.bench.connection.getAccountInfo(txPk).then(account => {
+      // Deserialize account data into ProposalVersionedTransaction
+      // This is a simplification - you'll need proper deserialization
+      return new ProposalVersionedTransaction({
+        accountType: 0, // Adjust as needed
+        proposal: this.proposalPk,
+        optionIndex: 0,
+        transactionIndex: 0,
+        executionIndex: 0,
+        executedAt: null,
+        executionStatus: TransactionExecutionStatus.None,
+        ephemeralSignerBumps: [],
+        message: new ProposalTransactionMessage({
+          numSigners: 0,
+          numWritableSigners: 0,
+          numWritableNonSigners: 0,
+          accountKeys: [],
+          instructions: [],
+          addressTableLookups: [],
+        }),
+      });
+    });
   }
 }

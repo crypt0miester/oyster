@@ -1340,11 +1340,27 @@ export enum TransactionExecutionStatus {
   Error = 'Error'
 }
 
-// Interface for address table lookups
-export interface VersionedTransactionMessageAddressTableLookup {
-  accountKey: PublicKey;
-  writableIndexes: number[];
-  readonlyIndexes: number[];
+// // Interface for address table lookups
+// export interface VersionedTransactionMessageAddressTableLookup {
+//   accountKey: PublicKey;
+//   writableIndexes: number[];
+//   readonlyIndexes: number[];
+// }
+
+export class VersionedTransactionMessageAddressTableLookup {
+    accountKey: PublicKey;
+    writableIndexes: number[];
+    readonlyIndexes: number[];
+
+  constructor(args: {
+      accountKey: PublicKey;
+      writableIndexes: number[];
+      readonlyIndexes: number[];
+  }) {
+    this.accountKey = args.accountKey;
+    this.writableIndexes = args.writableIndexes;
+    this.readonlyIndexes = args.readonlyIndexes;
+  }
 }
 export class ProposalCompiledInstruction {
   programIdIndex: number;

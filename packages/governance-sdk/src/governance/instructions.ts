@@ -39,7 +39,17 @@ export enum GovernanceInstruction {
   UpdateProgramMetadata = 24,
   CreateNativeTreasury = 25,
   RevokeGoverningTokens = 26,
-  RefundProposalDeposit = 27,
+  RefundProposalDeposit = 27, 
+  CompleteProposal = 28,
+  AddRequiredSignatory = 29,
+  RemoveRequiredSignatory = 30,
+  CreateTransactionBuffer = 31,
+  ExtendTransactionBuffer = 32,
+  CloseTransactionBuffer = 33,
+  InsertVersionedTransactionFromBuffer = 34,
+  InsertVersionedTransaction = 35,
+  ExecuteVersionedTransaction = 36,
+  RemoveVersionedTransaction = 37
 }
 
 export class CreateRealmArgs {
@@ -401,4 +411,75 @@ export class RevokeGoverningTokensArgs {
 export class RefundProposalDepositArgs {
   instruction: GovernanceInstruction =
     GovernanceInstruction.RefundProposalDeposit;
+}
+
+
+// Argument Classes
+export class CreateTransactionBufferArgs {
+  instruction: GovernanceInstruction = GovernanceInstruction.CreateTransactionBuffer;
+  bufferIndex: number;
+  finalBufferHash: Uint8Array;
+  finalBufferSize: number;
+  buffer: Uint8Array;
+
+  constructor(args: { bufferIndex: number; finalBufferHash: Uint8Array; finalBufferSize: number; buffer: Uint8Array }) {
+    this.bufferIndex = args.bufferIndex;
+    this.finalBufferHash = args.finalBufferHash;
+    this.finalBufferSize = args.finalBufferSize;
+    this.buffer = args.buffer;
+  }
+}
+
+export class ExtendTransactionBufferArgs {
+  instruction: GovernanceInstruction = GovernanceInstruction.ExtendTransactionBuffer;
+  bufferIndex: number;
+  buffer: Uint8Array;
+
+  constructor(args: { bufferIndex: number; buffer: Uint8Array }) {
+    this.bufferIndex = args.bufferIndex;
+    this.buffer = args.buffer;
+  }
+}
+
+export class CloseTransactionBufferArgs {
+  instruction: GovernanceInstruction = GovernanceInstruction.CloseTransactionBuffer;
+  bufferIndex: number;
+
+  constructor(args: { bufferIndex: number }) {
+    this.bufferIndex = args.bufferIndex;
+  }
+}
+
+export class InsertVersionedTransactionFromBufferArgs {
+  instruction: GovernanceInstruction = GovernanceInstruction.InsertVersionedTransactionFromBuffer;
+  optionIndex: number;
+  ephemeralSigners: number;
+  transactionIndex: number;
+  bufferIndex: number;
+
+  constructor(args: { optionIndex: number; ephemeralSigners: number; transactionIndex: number; bufferIndex: number }) {
+    this.optionIndex = args.optionIndex;
+    this.ephemeralSigners = args.ephemeralSigners;
+    this.transactionIndex = args.transactionIndex;
+    this.bufferIndex = args.bufferIndex;
+  }
+}
+
+export class InsertVersionedTransactionArgs {
+  instruction: GovernanceInstruction = GovernanceInstruction.InsertVersionedTransaction;
+  optionIndex: number;
+  ephemeralSigners: number;
+  transactionIndex: number;
+  transactionMessage: Uint8Array;
+
+  constructor(args: { optionIndex: number; ephemeralSigners: number; transactionIndex: number; transactionMessage: Uint8Array }) {
+    this.optionIndex = args.optionIndex;
+    this.ephemeralSigners = args.ephemeralSigners;
+    this.transactionIndex = args.transactionIndex;
+    this.transactionMessage = args.transactionMessage;
+  }
+}
+
+export class ExecuteVersionedTransactionArgs {
+  instruction: GovernanceInstruction = GovernanceInstruction.ExecuteVersionedTransaction;
 }

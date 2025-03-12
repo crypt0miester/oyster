@@ -5,6 +5,7 @@ import {
   AddSignatoryArgs,
   CancelProposalArgs,
   CastVoteArgs,
+  CloseTransactionBufferArgs,
   CreateGovernanceArgs,
   CreateMintGovernanceArgs,
   CreateNativeTreasuryArgs,
@@ -13,12 +14,16 @@ import {
   CreateRealmArgs,
   CreateTokenGovernanceArgs,
   CreateTokenOwnerRecordArgs,
+  CreateTransactionBufferArgs,
   DepositGoverningTokensArgs,
   ExecuteTransactionArgs,
+  ExecuteVersionedTransactionArgs,
+  ExtendTransactionBufferArgs,
   FinalizeVoteArgs,
   FlagTransactionErrorArgs,
   InsertTransactionArgs,
-  RefundProposalDepositArgs,
+  InsertVersionedTransactionArgs,
+  InsertVersionedTransactionFromBufferArgs,
   RelinquishVoteArgs,
   RemoveTransactionArgs,
   RevokeGoverningTokensArgs,
@@ -61,6 +66,11 @@ import {
   GoverningTokenConfigArgs,
   GoverningTokenConfig,
   ProposalDeposit,
+  ProposalTransactionBuffer,
+  ProposalTransactionMessage,
+  ProposalCompiledInstruction,
+  VersionedTransactionMessageAddressTableLookup,
+  ProposalVersionedTransaction
 } from './accounts';
 import { serialize } from 'borsh';
 import { BorshAccountParser } from '../core/serialisation';
@@ -672,10 +682,72 @@ function createGovernanceInstructionSchema(programVersion: number) {
       },
     ],
     [
-      RefundProposalDepositArgs,
+      CreateTransactionBufferArgs,
       {
         kind: 'struct',
-        fields: [['instruction', 'u8']],
+        fields: [
+          ['instruction', 'u8'],
+          ['bufferIndex', 'u8'],
+          ['finalBufferHash', [32]], // 32-byte array
+          ['finalBufferSize', 'u16'],
+          ['buffer', ['u8']], // Vector of bytes
+        ],
+      },
+    ],
+    [
+      ExtendTransactionBufferArgs,
+      {
+        kind: 'struct',
+        fields: [
+          ['instruction', 'u8'],
+          ['bufferIndex', 'u8'],
+          ['buffer', ['u8']], // Vector of bytes
+        ],
+      },
+    ],
+    [
+      CloseTransactionBufferArgs,
+      {
+        kind: 'struct',
+        fields: [
+          ['instruction', 'u8'],
+          ['bufferIndex', 'u8'],
+        ],
+      },
+    ],
+    [
+      InsertVersionedTransactionFromBufferArgs,
+      {
+        kind: 'struct',
+        fields: [
+          ['instruction', 'u8'],
+          ['optionIndex', 'u8'],
+          ['ephemeralSigners', 'u8'],
+          ['transactionIndex', 'u16'],
+          ['bufferIndex', 'u8'],
+        ],
+      },
+    ],
+    [
+      InsertVersionedTransactionArgs,
+      {
+        kind: 'struct',
+        fields: [
+          ['instruction', 'u8'],
+          ['optionIndex', 'u8'],
+          ['ephemeralSigners', 'u8'],
+          ['transactionIndex', 'u16'],
+          ['transactionMessage', ['u8']], // Vector of bytes
+        ],
+      },
+    ],
+    [
+      ExecuteVersionedTransactionArgs,
+      {
+        kind: 'struct',
+        fields: [
+          ['instruction', 'u8'],
+        ],
       },
     ],
     ...createGovernanceStructSchema(programVersion, undefined),
@@ -967,7 +1039,37 @@ function createGovernanceAccountSchema(accountVersion: number) {
         ],
       },
     ],
-    ...createGovernanceStructSchema(undefined, accountVersion),
+    [
+      ProposalTransactionMessage,
+      {
+        kind: 'struct',
+        fields: [
+          ['numSigners', 'u8'],
+          ['numWritableSigners', 'u8'],
+          ['numWritableNonSigners', 'u8'],
+          ['accountKeys', ['pubkey']], // Vector of pubkeys
+          ['instructions', [ProposalCompiledInstruction]], // Vector of instructions
+          ['addressTableLookups', [VersionedTransactionMessageAddressTableLookup]], // Vector of lookups
+        ],
+      },
+    ],
+    [
+      ProposalVersionedTransaction,
+      {
+        kind: 'struct',
+        fields: [
+          ['accountType', 'u8'],
+          ['proposal', 'pubkey'],
+          ['optionIndex', 'u8'],
+          ['transactionIndex', 'u16'],
+          ['executionIndex', 'u8'],
+          ['executedAt', { kind: 'option', type: 'u64' }], // Using option for null possibility
+          ['executionStatus', 'u8'], // Using u8 to match enum pattern
+          ['ephemeralSignerBumps', ['u8']], // Vector of u8
+          ['message', ProposalTransactionMessage],
+        ],
+      },
+    ],
   ]);
 }
 
