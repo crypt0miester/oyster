@@ -24,6 +24,7 @@ import {
   InsertTransactionArgs,
   InsertVersionedTransactionArgs,
   InsertVersionedTransactionFromBufferArgs,
+  RefundProposalDepositArgs,
   RelinquishVoteArgs,
   RemoveTransactionArgs,
   RevokeGoverningTokensArgs,
@@ -682,6 +683,13 @@ function createGovernanceInstructionSchema(programVersion: number) {
       },
     ],
     [
+      RefundProposalDepositArgs,
+      {
+        kind: 'struct',
+        fields: [['instruction', 'u8']],
+      },
+    ],
+    [
       CreateTransactionBufferArgs,
       {
         kind: 'struct',
@@ -1023,19 +1031,18 @@ function createGovernanceAccountSchema(accountVersion: number) {
           ['reserved', [64]],
         ],
       },
-    ],
-    [
+    ],[
       ProposalTransactionBuffer,
       {
         kind: 'struct',
         fields: [
           ['accountType', 'u8'],
-          ['communityMint', 'pubkey'],
-          ['config', RealmConfig],
-          ['reserved', [6]],
-          ['votingProposalCount', 'u16'],
-          ['authority', { kind: 'option', type: 'pubkey' }],
-          ['name', 'string'],
+          ['proposal', 'pubkey'],
+          ['creator', 'pubkey'],
+          ['bufferIndex', 'u8'],
+          ['finalBufferHash', [32]],
+          ['finalBufferSize', 'u16'],
+          ['buffer', ['u8']]
         ],
       },
     ],
@@ -1070,6 +1077,7 @@ function createGovernanceAccountSchema(accountVersion: number) {
         ],
       },
     ],
+    ...createGovernanceStructSchema(undefined, accountVersion),
   ]);
 }
 

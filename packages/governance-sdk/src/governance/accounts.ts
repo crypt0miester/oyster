@@ -53,6 +53,8 @@ export type GovernanceAccountClass =
   | typeof SignatoryRecord
   | typeof VoteRecord
   | typeof ProposalTransaction
+  | typeof ProposalVersionedTransaction
+  | typeof ProposalTransactionBuffer
   | typeof RealmConfigAccount
   | typeof ProgramMetadata
   | typeof ProposalDeposit;
@@ -88,6 +90,11 @@ export function getAccountTypes(accountClass: GovernanceAccountClass) {
         GovernanceAccountType.ProposalInstructionV1,
         GovernanceAccountType.ProposalTransactionV2,
       ];
+    case ProposalVersionedTransaction:
+      return [
+        GovernanceAccountType.ProposalVersionedTransaction,
+        GovernanceAccountType.ProposalTransactionBuffer,
+      ];
     case RealmConfigAccount:
       return [GovernanceAccountType.RealmConfig];
     case Governance:
@@ -122,6 +129,8 @@ export function getGovernanceAccountVersion(
     case GovernanceAccountType.MintGovernanceV2:
     case GovernanceAccountType.TokenGovernanceV2:
     case GovernanceAccountType.SignatoryRecordV2:
+    case GovernanceAccountType.ProposalTransactionBuffer:
+    case GovernanceAccountType.ProposalVersionedTransaction:
       return ACCOUNT_VERSION_V2;
     default:
       return ACCOUNT_VERSION_V1;

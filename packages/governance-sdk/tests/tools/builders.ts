@@ -19,6 +19,7 @@ import {
   getRealmConfig,
   getTokenOwnerRecord,
   getVoteRecord,
+  GovernanceAccountParser,
   Vote,
   withAddSignatory,
   withCastVote,
@@ -89,7 +90,7 @@ export class BenchBuilder {
     connection?: Connection | undefined,
     programId?: PublicKey | undefined,
   ) {
-    connection = connection ?? new Connection(rpcEndpoint, 'processed');
+    connection = connection ?? new Connection(rpcEndpoint, 'confirmed');
     programId = programId ?? rpcProgramId;
 
     const programVersion = await getGovernanceProgramVersion(
@@ -636,7 +637,7 @@ export class RealmBuilder {
 
   async withVersionedTransaction(
     optionIndex: number = 0,
-    ephemeralSigners: number | undefined,
+    ephemeralSigners: number = 0,
     transactionIndex: number = 0,
     transactionMessage: Uint8Array,
   ) {
@@ -667,47 +668,23 @@ export class RealmBuilder {
     return this;
   }
 
-  // Helper method to get account data (you might need to implement these in your SDK)
-  async getTransactionBuffer(bufferPk: PublicKey): Promise<ProposalTransactionBuffer> {
-    // Placeholder - implement actual fetch from chain
+  async getTransactionBuffer(bufferPk: PublicKey): Promise<ProposalTransactionBuffer | null> {
     return this.bench.connection.getAccountInfo(bufferPk).then(account => {
-      // Deserialize account data into ProposalTransactionBuffer
-      // This is a simplification - you'll need proper deserialization
-      return new ProposalTransactionBuffer({
-        accountType: 0, // Adjust as needed
-        proposal: this.proposalPk,
-        creator: this.bench.walletPk,
-        bufferIndex: 0,
-        finalBufferHash: new Uint8Array(32),
-        finalBufferSize: 0,
-        buffer: new Uint8Array(),
-      });
+      if (!account) return null
+      return GovernanceAccountParser(ProposalTransactionBuffer)(
+        bufferPk,
+        account
+      ).account
     });
   }
 
-  async getVersionedTransaction(txPk: PublicKey): Promise<ProposalVersionedTransaction> {
-    // Placeholder - implement actual fetch from chain
+  async getVersionedTransaction(txPk: PublicKey): Promise<ProposalVersionedTransaction | null> {
     return this.bench.connection.getAccountInfo(txPk).then(account => {
-      // Deserialize account data into ProposalVersionedTransaction
-      // This is a simplification - you'll need proper deserialization
-      return new ProposalVersionedTransaction({
-        accountType: 0, // Adjust as needed
-        proposal: this.proposalPk,
-        optionIndex: 0,
-        transactionIndex: 0,
-        executionIndex: 0,
-        executedAt: null,
-        executionStatus: TransactionExecutionStatus.None,
-        ephemeralSignerBumps: [],
-        message: new ProposalTransactionMessage({
-          numSigners: 0,
-          numWritableSigners: 0,
-          numWritableNonSigners: 0,
-          accountKeys: [],
-          instructions: [],
-          addressTableLookups: [],
-        }),
-      });
+      if (!account) return null
+      return GovernanceAccountParser(ProposalVersionedTransaction)(
+        txPk,
+        account
+      ).account
     });
   }
 }

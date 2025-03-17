@@ -6,7 +6,7 @@ export async function sendTransaction(connection: Connection, instructions: Tran
   signers.push(feePayer);
   let tx = await connection.sendTransaction(transaction, signers)
 
-  await connection.confirmTransaction(tx);
+  await connection.confirmTransaction(tx, 'confirmed');
 }
 
 export async function requestAirdrop(connection: Connection, walletPk: PublicKey) {
