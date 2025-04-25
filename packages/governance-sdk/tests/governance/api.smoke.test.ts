@@ -1,4 +1,4 @@
-import { Token, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import { createMintToInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
 import {
   Connection,
   Keypair,
@@ -245,13 +245,13 @@ test('setupRealm', async () => {
   instructions = [];
   signers = [];
 
-  const instruction = Token.createMintToInstruction(
-    TOKEN_PROGRAM_ID,
+  const instruction = createMintToInstruction(
     mintPk,
     ataPk,
     governancePk,
-    [],
     1,
+    [],
+    TOKEN_PROGRAM_ID,
   );
 
   const instructionData = createInstructionData(instruction);
@@ -493,7 +493,7 @@ test('tryGetRealmConfig', async () => {
   const realmConfig = await tryGetRealmConfig(connection, programId, realmPk);
 
   // Assert
-  expect(realmConfig.account.realm).toEqual(realmPk);
+  expect(realmConfig?.account.realm).toEqual(realmPk);
 });
 
 test('setGovernanceDelegate', async () => {

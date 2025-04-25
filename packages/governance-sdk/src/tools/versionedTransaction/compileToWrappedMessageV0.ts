@@ -7,7 +7,7 @@ import {
   PublicKey,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { CompiledKeys } from "./compiled-keys";
+import { CompiledKeys } from "./compiledKeys";
 
 export function compileToWrappedMessageV0({
   payerKey,

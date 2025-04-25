@@ -1047,6 +1047,28 @@ function createGovernanceAccountSchema(accountVersion: number) {
       },
     ],
     [
+      ProposalCompiledInstruction,
+      {
+        kind: 'struct',
+        fields: [
+          ['programIdIndex', 'u8'],
+          ['accountIndexes', ['u8']], // Vector of u8
+          ['data', ['u8']], // Vector of u8 (Uint8Array)
+        ],
+      },
+    ],
+    [
+      VersionedTransactionMessageAddressTableLookup,
+      {
+        kind: 'struct',
+        fields: [
+          ['accountKey', 'pubkey'],
+          ['writableIndexes', ['u8']], // Vector of u8
+          ['readonlyIndexes', ['u8']], // Vector of u8
+        ],
+      },
+    ],
+    [
       ProposalTransactionMessage,
       {
         kind: 'struct',

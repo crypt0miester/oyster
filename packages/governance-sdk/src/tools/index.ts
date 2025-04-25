@@ -4,3 +4,4 @@ export * from './numbers';
 export * from './script';
 export * from './version';
 export * from './walletAdapter';
+export * from './versionedTransaction';

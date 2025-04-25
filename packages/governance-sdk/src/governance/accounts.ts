@@ -1371,6 +1371,7 @@ export class VersionedTransactionMessageAddressTableLookup {
     this.readonlyIndexes = args.readonlyIndexes;
   }
 }
+
 export class ProposalCompiledInstruction {
   programIdIndex: number;
   accountIndexes: number[];
@@ -1381,10 +1382,6 @@ export class ProposalCompiledInstruction {
     accountIndexes: number[];
     data: Uint8Array;
   }) {
-    if (args.programIdIndex > 255) {
-      throw new Error('Program ID index must be a u8 (0-255)');
-    }
-
     args.accountIndexes.forEach(index => {
       if (index > 255) {
         throw new Error('Account indexes must be u8 (0-255)');
@@ -1464,7 +1461,6 @@ export class ProposalTransactionMessage {
     if (args.numSigners > 255) throw new Error('Number of signers must be a u8 (0-255)');
     if (args.numWritableSigners > 255) throw new Error('Number of writable signers must be a u8 (0-255)');
     if (args.numWritableNonSigners > 255) throw new Error('Number of writable non-signers must be a u8 (0-255)');
-
     this.numSigners = args.numSigners;
     this.numWritableSigners = args.numWritableSigners;
     this.numWritableNonSigners = args.numWritableNonSigners;
@@ -1631,31 +1627,6 @@ export class ProposalVersionedTransaction {
     const writableCount = this.message.getNumWritableSigners() +
       this.message.getNumWritableNonSigners();
     return this.message.getAccountKeys().slice(0, writableCount);
-  }
-
-  // Serialize the transaction
-  serialize(): Uint8Array {
-    const accountKeysLength = this.message.getAccountKeys().length * 32; // 32 bytes per pubkey
-    const instructionsLength = this.message.getInstructions().reduce(
-      (acc, inst) => acc + inst.serialize().length, 0
-    );
-
-    const buffer = new Uint8Array(
-      1 + // account type
-      32 + // proposal pubkey
-      1 + // option index
-      2 + // transaction index
-      1 + // execution index
-      8 + // executed at
-      1 + // execution status
-      1 + this.ephemeralSignerBumps.length + // bumps
-      3 + // message header (num_signers, num_writable_signers, num_writable_non_signers)
-      accountKeysLength +
-      instructionsLength
-    );
-
-    // Actual serialization implementation would go here
-    return buffer;
   }
 }
 
@@ -1843,10 +1814,10 @@ export async function getProposalTransactionBufferAddress(
     bufferIndexBuffer,
   ];
 
-  const [instructionAddress] = await PublicKey.findProgramAddress(
+  const [transactionBufferAddress] = await PublicKey.findProgramAddress(
     seeds,
     programId,
   );
 
-  return instructionAddress;
+  return transactionBufferAddress;
 }

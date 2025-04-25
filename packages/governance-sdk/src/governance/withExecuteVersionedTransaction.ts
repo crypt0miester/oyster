@@ -1,4 +1,5 @@
 import {
+  AccountMeta,
   PublicKey,
   TransactionInstruction,
 } from '@solana/web3.js';
@@ -12,6 +13,7 @@ export const withExecuteVersionedTransaction = async (
   governance: PublicKey,
   proposal: PublicKey,
   proposalTransaction: PublicKey,
+  remainingAccountKeys: AccountMeta[],
 ) => {
   const args = new ExecuteVersionedTransactionArgs();
   const data = Buffer.from(serialize(GOVERNANCE_INSTRUCTION_SCHEMA_V3, args));
@@ -21,6 +23,7 @@ export const withExecuteVersionedTransaction = async (
     { pubkey: proposal, isWritable: true, isSigner: false },
     { pubkey: proposalTransaction, isWritable: true, isSigner: false },
   ];
+  keys.push(...remainingAccountKeys);
 
   instructions.push(new TransactionInstruction({ keys, programId, data }));
   return proposalTransaction;

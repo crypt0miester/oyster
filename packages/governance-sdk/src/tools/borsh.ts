@@ -31,7 +31,6 @@ function deserializeField(
       if (typeof fieldType[0] === 'number') {
         return reader.readFixedArray(fieldType[0]);
       }
-
       return reader.readArray(() =>
         deserializeField(schema, fieldName, fieldType[0], reader),
       );
@@ -45,7 +44,6 @@ function deserializeField(
 
       return undefined;
     }
-
     return deserializeStruct(schema, fieldType, reader);
   } catch (error) {
     if (error instanceof BorshError) {

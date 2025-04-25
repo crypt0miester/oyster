@@ -12,6 +12,7 @@ import {
 } from '@solana/web3.js';
 import BN from 'bn.js';
 import {
+  accountsForTransactionExecute,
   getGovernance,
   getProposal,
   getProposalDepositsByDepositPayer,
@@ -25,6 +26,7 @@ import {
   withCastVote,
   withCloseTransactionBuffer,
   withCreateGovernance,
+  withCreateNativeTreasury,
   withCreateProposal,
   withCreateTransactionBuffer,
   withDepositGoverningTokens,
@@ -57,7 +59,7 @@ import {
 import { getGovernanceProgramVersion } from '../../src/governance/version';
 import { withCreateRealm } from '../../src/governance/withCreateRealm';
 import { withSetRealmConfig } from '../../src/governance/withSetRealmConfig';
-import { requestAirdrop, sendTransaction } from './sdk';
+import { requestAirdrop, sendTransaction, sendV0Transaction } from './sdk';
 import { rpcEndpoint, rpcProgramId } from './setup';
 import { getTimestampFromDays } from './units';
 import { withCreateAssociatedTokenAccount } from './withCreateAssociatedTokenAccount';
@@ -117,12 +119,13 @@ export class BenchBuilder {
     return this;
   }
 
-  async sendTx() {
-    await sendTransaction(
+  async sendTx(withSimulation) {
+    await sendV0Transaction(
       this.connection,
       this.instructions,
       this.signers,
       this.wallet,
+      withSimulation
     );
     this.instructions = [];
     this.signers = [];
@@ -155,6 +158,7 @@ export class RealmBuilder {
   governancePk: PublicKey;
   proposalPk: PublicKey;
   signatoryPk: PublicKey | undefined;
+  treasuryPk: PublicKey | undefined;
   voteRecordPk: PublicKey;
 
   proposalTransactionBufferPk: PublicKey;
@@ -262,6 +266,29 @@ export class RealmBuilder {
     return getRealmConfig(this.bench.connection, realmConfigPk);
   }
 
+  async withdrawGoverningTokens(useToken2022?: boolean | undefined) { 
+    const ataPk = await getAssociatedTokenAddress(
+      this.communityMintPk,
+      this.bench.walletPk,
+      false,
+      useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+      ASSOCIATED_TOKEN_PROGRAM_ID,
+    );
+
+    await withWithdrawGoverningTokens(
+      this.bench.instructions,
+      this.bench.programId,
+      this.bench.programVersion,
+      this.realmPk,
+      ataPk,
+      this.communityMintPk,
+      this.bench.walletPk,
+      useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+    );
+
+    await this.sendTx();
+  }
+
   async withCommunityMember(useToken2022?: boolean | undefined) {
     let ataPk = await withCreateAssociatedTokenAccount(
       this.bench.instructions,
@@ -297,27 +324,15 @@ export class RealmBuilder {
     return this;
   }
 
-  async withdrawGoverningTokens(useToken2022?: boolean | undefined) { 
-    const ataPk = await getAssociatedTokenAddress(
-      this.communityMintPk,
-      this.bench.walletPk,
-      false,
-      useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
-      ASSOCIATED_TOKEN_PROGRAM_ID,
-    );
-
-    await withWithdrawGoverningTokens(
+  async withNativeTreasury() { 
+    this.treasuryPk = await withCreateNativeTreasury(
       this.bench.instructions,
       this.bench.programId,
       this.bench.programVersion,
-      this.realmPk,
-      ataPk,
-      this.communityMintPk,
-      this.bench.walletPk,
-      useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+      this.governancePk,
+      this.realmAuthorityPk
     );
-
-    await this.sendTx();
+    return this
   }
 
   async revokeGoverningTokens(useToken2022?: boolean | undefined) {
@@ -556,8 +571,8 @@ export class RealmBuilder {
     await this.sendTx();
   }
 
-  async sendTx() {
-    await this.bench.sendTx();
+  async sendTx(withSimulation: boolean = false) {
+    await this.bench.sendTx(withSimulation);
     return this;
   }
 
@@ -658,12 +673,24 @@ export class RealmBuilder {
   }
 
   async executeVersionedTransaction() {
+    const versionedTransaction = await this.getVersionedTransactionProposal(this.proposalVersionedTxPk)
+    const {accountMetas, lookupTableAccounts: _lookupTableAccounts} = await accountsForTransactionExecute({
+      connection: this.bench.connection,
+      transactionProposalPda: this.proposalVersionedTxPk,
+      transactionIndex: 0,
+      governancePk: this.governancePk,
+      treasuryPk: this.treasuryPk ?? this.communityMintPk,
+      message: versionedTransaction?.message!,
+      ephemeralSignerBumps: [],
+      programId: this.bench.programId,
+    })
     await withExecuteVersionedTransaction(
       this.bench.instructions,
       this.bench.programId,
       this.governancePk,
       this.proposalPk,
       this.proposalVersionedTxPk,
+      accountMetas
     );
     return this;
   }
@@ -678,7 +705,7 @@ export class RealmBuilder {
     });
   }
 
-  async getVersionedTransaction(txPk: PublicKey): Promise<ProposalVersionedTransaction | null> {
+  async getVersionedTransactionProposal(txPk: PublicKey): Promise<ProposalVersionedTransaction | null> {
     return this.bench.connection.getAccountInfo(txPk).then(account => {
       if (!account) return null
       return GovernanceAccountParser(ProposalVersionedTransaction)(

@@ -7,7 +7,7 @@ import {
 } from "@solana/web3.js";
 import invariant from "../invariant";
 import { compileToWrappedMessageV0 } from "./compileToWrappedMessageV0";
-import { getEphemeralSignerPda, ProposalCompiledInstruction, ProposalTransactionMessage } from "../../governance";
+import { getEphemeralSignerPda, ProposalCompiledInstruction, ProposalTransactionMessage } from "../../governance/accounts";
 
 export function isStaticWritableIndex(
   message: ProposalTransactionMessage,
@@ -41,25 +41,25 @@ export function isSignerIndex(message: ProposalTransactionMessage, index: number
 }
 
 /** We use custom serialization for `transaction_message` that ensures as small byte size as possible. */
-export function transactionMessageToMultisigTransactionMessageBytes({
+export function transactionMessageToRealmsTransactionMessageBytes({
   message,
   addressLookupTableAccounts,
-  governancePda,
-  treasuryPda,
+  governancePk,
+  treasuryPk,
 }: {
   message: TransactionMessage;
   addressLookupTableAccounts?: AddressLookupTableAccount[];
-  governancePda: PublicKey;
-  treasuryPda: PublicKey;
+  governancePk: PublicKey;
+  treasuryPk: PublicKey;
 }): Uint8Array {
   // Make sure authority is marked as non-signer in all instructions,
   // otherwise the message will be serialized in incorrect format.
   message.instructions.forEach((instruction) => {
     instruction.keys.forEach((key) => {
-      if (key.pubkey.equals(governancePda)) {
+      if (key.pubkey.equals(governancePk)) {
         key.isSigner = false;
       }
-      if (key.pubkey.equals(treasuryPda)) {
+      if (key.pubkey.equals(treasuryPk)) {
         key.isSigner = false;
       }
     });
@@ -113,8 +113,8 @@ export async function accountsForTransactionExecute({
   connection,
   transactionProposalPda,
   transactionIndex,
-  governancePda,
-  treasuryPda,
+  governancePk,
+  treasuryPk,
   message,
   ephemeralSignerBumps,
   programId,
@@ -123,8 +123,8 @@ export async function accountsForTransactionExecute({
   message: ProposalTransactionMessage;
   ephemeralSignerBumps: number[];
   transactionIndex: number;
-  governancePda: PublicKey;
-  treasuryPda: PublicKey;
+  governancePk: PublicKey;
+  treasuryPk: PublicKey;
   transactionProposalPda: PublicKey;
   programId: PublicKey;
 }): Promise<{
@@ -174,12 +174,12 @@ export async function accountsForTransactionExecute({
     accountMetas.push({
       pubkey: accountKey,
       isWritable: isStaticWritableIndex(message, accountIndex),
-      // NOTE: governancePda and treasuryPda and ephemeralSignerPdas cannot be marked as signers,
+      // NOTE: governancePk and treasuryPk and ephemeralSignerPdas cannot be marked as signers,
       // because they are PDAs and hence won't have their signatures on the transaction.
       isSigner:
         isSignerIndex(message, accountIndex) &&
-        !accountKey.equals(treasuryPda) &&
-        !accountKey.equals(governancePda) &&
+        !accountKey.equals(treasuryPk) &&
+        !accountKey.equals(governancePk) &&
         !ephemeralSignerPdas.find((k) => accountKey.equals(k)),
     });
   }
