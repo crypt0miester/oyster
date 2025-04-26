@@ -253,7 +253,7 @@ export async function getGovernanceAccounts<TAccount extends GovernanceAccount>(
 ) {
 	const accountTypes = getAccountTypes(accountClass as any as GovernanceAccountClass);
 
-	const all: ProgramAccount<TAccount>[] = [];
+	let all: ProgramAccount<TAccount>[] = [];
 
 	for (const accountType of accountTypes) {
 		const accounts = await getBorshProgramAccounts(
@@ -265,7 +265,7 @@ export async function getGovernanceAccounts<TAccount extends GovernanceAccount>(
 			accountType,
 		);
 
-		all.push(...accounts);
+    all = all.concat(accounts);
 	}
 
 	return all;
