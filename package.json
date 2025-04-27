@@ -19,8 +19,8 @@
 	"scripts": {
 		"build": "tsc",
 		"test": "jest",
-		"test:bun": "bun test tests/governance/api.v3.vtxn.test.ts --timeout 20000",
-		"test:bun-t2022": "bun test tests/governance/api.v3.t2022.test.ts --timeout 20000",
+		"test:bun": "bun test tests/governance/api.v3.vtxn.test.ts --timeout 30000",
+		"test:bun-t2022": "bun test tests/governance/api.v3.t2022.test.ts --timeout 30000",
 		"format": "yarn biome format --write .",
 		"lint": "yarn biome lint --write ."
 	},

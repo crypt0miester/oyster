@@ -17,7 +17,7 @@ export type CompiledKeyMeta = {
 type KeyMetaMap = Map<string, CompiledKeyMeta>;
 
 /**
- *  This is almost completely copy-pasted from solana-web3.js and slightly adapted to work with "wrapped" transaction messaged such as in VaultTransaction.
+ *  This is almost completely copy-pasted from solana-web3.js and slightly adapted to work with "wrapped" transaction messaged such as in ProposalVersionedTransaction.
  *  @see https://github.com/solana-labs/solana-web3.js/blob/87d33ac68e2453b8a01cf8c425aa7623888434e8/packages/library-legacy/src/message/compiled-keys.ts
  */
 export class CompiledKeys {
@@ -32,7 +32,7 @@ export class CompiledKeys {
 	/**
 	 * The only difference between this and the original is that we don't mark the instruction programIds as invoked.
 	 * It makes sense to do because the instructions will be called via CPI, so the programIds can come from Address Lookup Tables.
-	 * This allows to compress the message size and avoid hitting the tx size limit during vault_transaction_create instruction calls.
+	 * This allows to compress the message size and avoid hitting the tx size limit during process_insert_versioned_transaction instruction calls.
 	 */
 	static compile(instructions: Array<TransactionInstruction>, payer: PublicKey): CompiledKeys {
 		const keyMetaMap: KeyMetaMap = new Map();

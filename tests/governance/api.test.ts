@@ -1,5 +1,5 @@
 import { Token, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { clusterApiUrl, Connection, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, Keypair, PublicKey, type TransactionInstruction } from "@solana/web3.js";
 import { BN } from "bn.js";
 import {
 	createInstructionData,
@@ -49,9 +49,9 @@ test("createRealmWithGovernanceAndProposal", async () => {
 	let signers: Keypair[] = [];
 
 	// Create and mint governance token
-	let mintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
+	const mintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
 
-	let ataPk = await withCreateAssociatedTokenAccount(instructions, mintPk, walletPk, walletPk);
+	const ataPk = await withCreateAssociatedTokenAccount(instructions, mintPk, walletPk, walletPk);
 	await withMintTo(instructions, mintPk, ataPk, walletPk, 1);
 
 	// Create Realm
@@ -88,18 +88,18 @@ test("createRealmWithGovernanceAndProposal", async () => {
 
 	// Crate governance over the the governance token mint
 
-	let communityVoteThreshold = new VoteThreshold({
+	const communityVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		value: 60,
 	});
 
-	let councilVoteThreshold = new VoteThreshold({
+	const councilVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		// For VERSION < 3 we have to pass 0
 		value: programVersion >= 3 ? 10 : 0,
 	});
 
-	let councilVetoVoteThreshold = new VoteThreshold({
+	const councilVetoVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		// For VERSION < 3 we have to pass 0
 		value: programVersion >= 3 ? 10 : 0,

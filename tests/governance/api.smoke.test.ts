@@ -1,5 +1,5 @@
 import { createMintToInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey, type TransactionInstruction } from "@solana/web3.js";
 import { BN } from "bn.js";
 import {
 	createInstructionData,
@@ -69,9 +69,9 @@ test("setupRealm", async () => {
 	let signers: Keypair[] = [];
 
 	// Create and mint governance token
-	let mintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
+	const mintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
 
-	let ataPk = await withCreateAssociatedTokenAccount(instructions, mintPk, walletPk, walletPk);
+	const ataPk = await withCreateAssociatedTokenAccount(instructions, mintPk, walletPk, walletPk);
 	await withMintTo(instructions, mintPk, ataPk, walletPk, 1);
 
 	// Create Realm
@@ -128,24 +128,24 @@ test("setupRealm", async () => {
 
 	// Crate governance over the the governance token mint
 
-	let communityVoteThreshold = new VoteThreshold({
+	const communityVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		value: 60,
 	});
 
-	let councilVoteThreshold = new VoteThreshold({
+	const councilVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		// For VERSION < 3 we have to pass 0
 		value: programVersion >= 3 ? 10 : 0,
 	});
 
-	let councilVetoVoteThreshold = new VoteThreshold({
+	const councilVetoVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		// For VERSION < 3 we have to pass 0
 		value: programVersion >= 3 ? 10 : 0,
 	});
 
-	let communityVetoVoteThreshold = new VoteThreshold({
+	const communityVetoVoteThreshold = new VoteThreshold({
 		type: VoteThresholdType.YesVotePercentage,
 		// For VERSION < 3 we have to pass 0
 		value: programVersion >= 3 ? 10 : 0,
@@ -458,9 +458,9 @@ test("setGovernanceDelegate", async () => {
 	let signers: Keypair[] = [];
 
 	// Create and mint governance token
-	let communityMintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
+	const communityMintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
 
-	let ataPk = await withCreateAssociatedTokenAccount(instructions, communityMintPk, walletPk, walletPk);
+	const ataPk = await withCreateAssociatedTokenAccount(instructions, communityMintPk, walletPk, walletPk);
 	await withMintTo(instructions, communityMintPk, ataPk, walletPk, 1);
 
 	// Create Realm
@@ -516,7 +516,7 @@ test("setGovernanceDelegate", async () => {
 	await sendTransaction(connection, instructions, signers, wallet);
 
 	// Assert
-	let tokenOwnerRecord = await getTokenOwnerRecord(connection, tokenOwnerRecordPk);
+	const tokenOwnerRecord = await getTokenOwnerRecord(connection, tokenOwnerRecordPk);
 
 	expect(tokenOwnerRecord.account.governanceDelegate).toEqual(delegatePk);
 });

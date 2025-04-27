@@ -4,7 +4,7 @@ import {
 	getAssociatedTokenAddress,
 	TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import type { PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 export const withCreateAssociatedTokenAccount = async (
 	instructions: TransactionInstruction[],
@@ -12,7 +12,7 @@ export const withCreateAssociatedTokenAccount = async (
 	ownerPk: PublicKey,
 	payerPk: PublicKey,
 	tokenProgram: PublicKey = TOKEN_PROGRAM_ID,
-	allowOwnerOffCurve: boolean = false,
+	allowOwnerOffCurve = false,
 ) => {
 	const ataPk = await getAssociatedTokenAddress(
 		mintPk,

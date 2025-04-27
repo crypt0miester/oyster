@@ -1,4 +1,4 @@
-import { clusterApiUrl, Connection, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { clusterApiUrl, Connection, Keypair, PublicKey, type TransactionInstruction } from "@solana/web3.js";
 import { BN } from "bn.js";
 import {
 	ChatMessageBody,
@@ -42,13 +42,13 @@ test("postProposalComment", async () => {
 	// Get governance program version
 	const programVersion = await getGovernanceProgramVersion(connection, governanceProgramId);
 
-	let instructions: TransactionInstruction[] = [];
-	let signers: Keypair[] = [];
+	const instructions: TransactionInstruction[] = [];
+	const signers: Keypair[] = [];
 
 	// Create and mint governance token
-	let mintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
+	const mintPk = await withCreateMint(connection, instructions, signers, walletPk, walletPk, 0, walletPk);
 
-	let ataPk = await withCreateAssociatedTokenAccount(instructions, mintPk, walletPk, walletPk);
+	const ataPk = await withCreateAssociatedTokenAccount(instructions, mintPk, walletPk, walletPk);
 	await withMintTo(instructions, mintPk, ataPk, walletPk, 1);
 
 	// Create Realm

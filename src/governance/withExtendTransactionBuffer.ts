@@ -4,6 +4,11 @@ import { serialize } from "borsh";
 import { ExtendTransactionBufferArgs } from "./instructions";
 import { getProposalTransactionBufferAddress } from "./accounts";
 
+// Transaction instruction to extend the transaction buffer of a proposal
+// This instruction allows the creator of a proposal to extend the transaction buffer
+// by providing a new buffer of instructions. The buffer index indicates which
+// transaction buffer is being extended.
+// NOTE: This is only used when the transaction byte size exceeds the 800 byte safe limit
 export const withExtendTransactionBuffer = async (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,

@@ -4,7 +4,13 @@ import {
 	TOKEN_2022_PROGRAM_ID,
 	TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey, TransactionInstruction } from "@solana/web3.js";
+import {
+	type AddressLookupTableAccount,
+	Connection,
+	Keypair,
+	type PublicKey,
+	type TransactionInstruction,
+} from "@solana/web3.js";
 import BN from "bn.js";
 import {
 	accountsForTransactionExecute,
@@ -83,18 +89,18 @@ export class BenchBuilder {
 		connection?: Connection | undefined,
 		programId?: PublicKey | undefined,
 	) {
-		connection = connection ?? new Connection(rpcEndpoint, "confirmed");
-		programId = programId ?? rpcProgramId;
+		const connectionFixed = connection ?? new Connection(rpcEndpoint, "confirmed");
+		const programIdFixed = programId ?? rpcProgramId;
 
-		const programVersion = await getGovernanceProgramVersion(connection, programId);
+		const programVersion = await getGovernanceProgramVersion(connectionFixed, programIdFixed);
 
-		if (requiredProgramVersion && programVersion != requiredProgramVersion) {
+		if (requiredProgramVersion && programVersion !== requiredProgramVersion) {
 			throw new Error(
 				`Program VERSION: ${programVersion} detected while VERSION: ${requiredProgramVersion} is required for the test`,
 			);
 		}
 
-		return new BenchBuilder(connection, programId, programVersion);
+		return new BenchBuilder(connectionFixed, programIdFixed, programVersion);
 	}
 
 	async withWallet() {
@@ -107,8 +113,15 @@ export class BenchBuilder {
 		return this;
 	}
 
-	async sendTx(withSimulation) {
-		await sendV0Transaction(this.connection, this.instructions, this.signers, this.wallet, withSimulation);
+	async sendTx(withSimulation = false, addressLookupTableAccounts: AddressLookupTableAccount[] = []) {
+		await sendV0Transaction(
+			this.connection,
+			this.instructions,
+			this.signers,
+			this.wallet,
+			withSimulation,
+			addressLookupTableAccounts,
+		);
 		this.instructions = [];
 		this.signers = [];
 
@@ -209,7 +222,7 @@ export class RealmBuilder {
 	) {
 		const communityMintMaxVoteWeightSource = MintMaxVoteWeightSource.FULL_SUPPLY_FRACTION;
 
-		communityTokenConfig =
+		const communityTokenConfigFixed =
 			communityTokenConfig ??
 			new GoverningTokenConfigAccountArgs({
 				voterWeightAddin: Keypair.generate().publicKey,
@@ -226,7 +239,7 @@ export class RealmBuilder {
 			this.councilMintPk,
 			communityMintMaxVoteWeightSource,
 			new BN(1),
-			communityTokenConfig,
+			communityTokenConfigFixed,
 			councilTokenConfig,
 			this.bench.walletPk,
 		);
@@ -263,7 +276,7 @@ export class RealmBuilder {
 	}
 
 	async withCommunityMember(useToken2022?: boolean | undefined) {
-		let ataPk = await withCreateAssociatedTokenAccount(
+		const ataPk = await withCreateAssociatedTokenAccount(
 			this.bench.instructions,
 			this.communityMintPk,
 			this.bench.walletPk,
@@ -341,7 +354,7 @@ export class RealmBuilder {
 	}
 
 	async _createGovernance(config?: GovernanceConfig | undefined) {
-		config =
+		const configFixed =
 			config ??
 			new GovernanceConfig({
 				communityVoteThreshold: new VoteThreshold({
@@ -380,7 +393,7 @@ export class RealmBuilder {
 			this.bench.programVersion,
 			this.realmPk,
 			governedAccountPk,
-			config,
+			configFixed,
 			this.communityOwnerRecordPk,
 			this.bench.walletPk,
 			this.bench.walletPk,
@@ -540,16 +553,16 @@ export class RealmBuilder {
 		await this.sendTx();
 	}
 
-	async sendTx(withSimulation: boolean = false) {
-		await this.bench.sendTx(withSimulation);
+	async sendTx(withSimulation = false, addressLookupTableAccounts: AddressLookupTableAccount[] = []) {
+		await this.bench.sendTx(withSimulation, addressLookupTableAccounts);
 		return this;
 	}
 
 	async withTransactionBuffer(
-		bufferIndex: number = 0,
+		bufferIndex = 0,
 		finalBufferHash: Uint8Array = new Uint8Array(32), // 32-byte zero hash
-		finalBufferSize: number = 100,
-		buffer: Uint8Array,
+		finalBufferSize = 100,
+		buffer: Uint8Array = new Uint8Array(0),
 	) {
 		this.proposalTransactionBufferPk = await withCreateTransactionBuffer(
 			this.bench.instructions,
@@ -567,7 +580,7 @@ export class RealmBuilder {
 		return this;
 	}
 
-	async extendTransactionBuffer(bufferIndex: number = 0, buffer: Uint8Array) {
+	async extendTransactionBuffer(bufferIndex = 0, buffer: Uint8Array = new Uint8Array(0)) {
 		await withExtendTransactionBuffer(
 			this.bench.instructions,
 			this.bench.programId,
@@ -580,7 +593,7 @@ export class RealmBuilder {
 		return this;
 	}
 
-	async closeTransactionBuffer(bufferIndex: number = 0) {
+	async closeTransactionBuffer(bufferIndex = 0) {
 		await withCloseTransactionBuffer(
 			this.bench.instructions,
 			this.bench.programId,
@@ -595,10 +608,10 @@ export class RealmBuilder {
 	}
 
 	async withVersionedTransactionFromBuffer(
-		optionIndex: number = 0,
-		ephemeralSigners: number = 0,
-		transactionIndex: number = 0,
-		bufferIndex: number = 0,
+		optionIndex = 0,
+		ephemeralSigners = 0,
+		transactionIndex = 0,
+		bufferIndex = 0,
 	) {
 		this.proposalVersionedTxPk = await withInsertVersionedTransactionFromBuffer(
 			this.bench.instructions,
@@ -617,10 +630,10 @@ export class RealmBuilder {
 	}
 
 	async withVersionedTransaction(
-		optionIndex: number = 0,
-		ephemeralSigners: number = 0,
-		transactionIndex: number = 0,
-		transactionMessage: Uint8Array,
+		optionIndex = 0,
+		ephemeralSigners = 0,
+		transactionIndex = 0,
+		transactionMessage: Uint8Array = new Uint8Array(0),
 	) {
 		this.proposalVersionedTxPk = await withInsertVersionedTransaction(
 			this.bench.instructions,

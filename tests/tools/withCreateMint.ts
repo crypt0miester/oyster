@@ -1,5 +1,5 @@
 import { createInitializeMintInstruction, MintLayout } from "@solana/spl-token";
-import { Connection, Keypair, PublicKey, SystemProgram, TransactionInstruction } from "@solana/web3.js";
+import { type Connection, Keypair, type PublicKey, SystemProgram, type TransactionInstruction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "../../src/tools/sdk/splToken";
 
 export const withCreateMint = async (

@@ -13,6 +13,7 @@ import {
 	ProposalTransactionMessage,
 } from "../../governance/accounts";
 
+// checks if an account index is writable in the static account keys of a transaction message
 export function isStaticWritableIndex(message: ProposalTransactionMessage, index: number) {
 	const numAccountKeys = message.accountKeys.length;
 	const { numSigners, numWritableSigners, numWritableNonSigners } = message;
@@ -49,16 +50,6 @@ export function transactionMessageToRealmsTransactionMessageBytes({
 	message: TransactionMessage;
 	addressLookupTableAccounts?: AddressLookupTableAccount[];
 }): Uint8Array {
-	// Make sure authority is marked as non-signer in all instructions,
-	// otherwise the message will be serialized in incorrect format.
-	// for (const instruction of message.instructions) {
-	// 	for (const key of instruction.keys) {
-	// 		if (key.pubkey.equals(treasuryPk)) {
-	// 			key.isSigner = false;
-	// 		}
-	// 	}
-	// }
-
 	// Use custom implementation of `message.compileToV0Message` that allows instruction programIds
 	// to also be loaded from `addressLookupTableAccounts`.
 	const compiledMessage = compileToWrappedMessageV0({
@@ -83,7 +74,6 @@ export function transactionMessageToRealmsTransactionMessageBytes({
 		writableIndexes: lookup.writableIndexes,
 		readonlyIndexes: lookup.readonlyIndexes,
 	}));
-
 	// Create and serialize ProposalTransactionMessage
 	const proposalMessage = new ProposalTransactionMessage({
 		numSigners: compiledMessage.header.numRequiredSignatures,
@@ -207,6 +197,7 @@ export async function accountsForTransactionExecute({
 	};
 }
 
+/** Fetches address lookup table accounts from the Solana blockchain in one go. */
 export const getAddressLookupTableAccounts = async (
 	connection: Connection,
 	keys: PublicKey[],
