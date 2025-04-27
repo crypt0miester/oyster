@@ -22,22 +22,22 @@
 		"enabled": true,
 		"rules": {
 			"recommended": true,
-				"style": {
-					"noNonNullAssertion": "off"
-				},
-				"suspicious": {
-					"noExplicitAny": "off"
-				},
-				"complexity": {
-					"noBannedTypes": "off"
-				}
+			"style": {
+				"noNonNullAssertion": "off"
+			},
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+			"complexity": {
+				"noBannedTypes": "off"
+			}
 		}
 	},
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double",
-      "lineWidth": 120,
-      "semicolons": "always",
+			"lineWidth": 120,
+			"semicolons": "always",
 			"indentWidth": 2
 		}
 	}

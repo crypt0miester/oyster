@@ -1,20 +1,33 @@
-import { ComputeBudgetProgram, Keypair, LAMPORTS_PER_SOL, PublicKey, TransactionInstruction, TransactionMessage } from '@solana/web3.js';
-import BN from 'bn.js';
 import {
-  GovernanceConfig,
-  GoverningTokenConfigAccountArgs,
-  GoverningTokenType,
-  TransactionExecutionStatus,
-  VoteThreshold,
-  VoteThresholdType,
-  VoteTipping,
-} from '../../src/governance/accounts';
-import { PROGRAM_VERSION_V3 } from '../../src/registry/constants';
-import { BenchBuilder } from '../tools/builders';
-import { getTimestampFromDays } from '../tools/units';
-import { createTestTransferInstruction } from '../tools/sdk';
-import { transactionMessageToRealmsTransactionMessageBytes } from '../../src';
+	ComputeBudgetProgram,
+	Keypair,
+	LAMPORTS_PER_SOL,
+	PublicKey,
+	TransactionInstruction,
+	TransactionMessage,
+} from "@solana/web3.js";
+import BN from "bn.js";
+import {
+	getEphemeralSignerPda,
+	getProposalVersionedTransactionAddress,
+	GovernanceConfig,
+	GoverningTokenConfigAccountArgs,
+	GoverningTokenType,
+	TransactionExecutionStatus,
+	VoteThreshold,
+	VoteThresholdType,
+	VoteTipping,
+} from "../../src/governance/accounts";
+import { PROGRAM_VERSION_V3 } from "../../src/registry/constants";
+import { BenchBuilder } from "../tools/builders";
+import { getTimestampFromDays } from "../tools/units";
+import { createTestTransferInstruction } from "../tools/sdk";
+import { transactionMessageToRealmsTransactionMessageBytes } from "../../src";
 import * as crypto from "crypto";
+import { withCreateMint, withCreateMintCustomMint } from "../tools/withCreateMint";
+import { withCreateAssociatedTokenAccount } from "../tools/withCreateAssociatedTokenAccount";
+import { withMintTo } from "../tools/withMintTo";
+import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 test('getGovernanceProgramVersion', async () => {
   // Arrange
@@ -236,7 +249,6 @@ test('createProposal', async () => {
   expect(governance.account.activeProposalCount.toNumber()).toEqual(1);
 });
 
-
 test('createTransactionBuffer', async () => {
   // Arrange
   const realm = await BenchBuilder.withConnection(PROGRAM_VERSION_V3)
@@ -385,8 +397,6 @@ test('insertVersionedTransactionFromBuffer', async () => {
     transactionMessageToRealmsTransactionMessageBytes({
       message: testTransferMessage,
       addressLookupTableAccounts: [],
-      governancePk: realm.governancePk,
-      treasuryPk: realm.treasuryPk!
     });
 
   const messageHash = crypto
@@ -441,8 +451,6 @@ test('insertVersionedTransaction', async () => {
     transactionMessageToRealmsTransactionMessageBytes({
       message: testTransferMessage,
       addressLookupTableAccounts: [],
-      governancePk: realm.governancePk,
-      treasuryPk: realm.treasuryPk!
     });
 
   const messageHash = crypto
@@ -478,7 +486,6 @@ test('insertVersionedTransaction', async () => {
   expect(versionedTx.ephemeralSignerBumps.length).toEqual(ephemeralSigners);
   expect(Buffer.from(versionedTx.message.serialize())).toEqual(Buffer.from(messageBuffer));
 });
-
 
 test('executeVersionedTransaction', async () => {
   const testPayee = Keypair.generate();
@@ -519,8 +526,6 @@ test('executeVersionedTransaction', async () => {
     transactionMessageToRealmsTransactionMessageBytes({
       message: testTransferMessage,
       addressLookupTableAccounts: [],
-      governancePk: realm.governancePk,
-      treasuryPk: realm.treasuryPk!
     });
 
   const messageHash = crypto
@@ -550,8 +555,8 @@ test('executeVersionedTransaction', async () => {
   await realm.withProposalSignOff()
     .then(b => b.withCastVote())
     .then(b => b.sendTx());
-  // Assert
 
+  // Assert
   await new Promise(f => setTimeout(f, 2000));
 
   await realm.executeVersionedTransaction()
@@ -559,12 +564,11 @@ test('executeVersionedTransaction', async () => {
 
   const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
   if (!versionedTx) throw Error("No versioned transaction found")
-    
+
   const executionStatusIndex = Object.values(TransactionExecutionStatus).indexOf(TransactionExecutionStatus.Success);
-  expect(versionedTx.executionStatus).toEqual(executionStatusIndex); 
+  expect(versionedTx.executionStatus).toEqual(executionStatusIndex);
   expect(Number(versionedTx?.executedAt)).toBeLessThan(new Date().getTime() / 1000);
 });
-
 
 test('executeVersionedTransaction with heaps and multiple buffers', async () => {
   const testPayee = Keypair.generate();
@@ -600,13 +604,11 @@ test('executeVersionedTransaction with heaps and multiple buffers', async () => 
     instructions: instructions,
   });
 
-  // // Serialize the message. Must be done with this util function
+  // Serialize the message. Must be done with this util function
   const messageBuffer =
     transactionMessageToRealmsTransactionMessageBytes({
       message: testTransferMessage,
       addressLookupTableAccounts: [],
-      governancePk: realm.governancePk,
-      treasuryPk: realm.treasuryPk!
     });
 
   const messageHash = crypto
@@ -616,7 +618,7 @@ test('executeVersionedTransaction with heaps and multiple buffers', async () => 
 
   realm = await realm.withProposal()
     .then(b => b.sendTx());
-    const CHUNK_SIZE = 700; // Safe chunk size for buffer extension
+    const CHUNK_SIZE = 800; // Safe chunk size for buffer extension
 
     const firstSlice = messageBuffer.slice(0, CHUNK_SIZE);
 
@@ -663,11 +665,216 @@ test('executeVersionedTransaction with heaps and multiple buffers', async () => 
   realm.bench.instructions.push(requestHeapIx, computeBudgetIxn);
   await realm.executeVersionedTransaction()
     .then(b => b.sendTx());
-    
+
   const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
   if (!versionedTx) throw Error("No versioned transaction found")
-    
+
   const executionStatusIndex = Object.values(TransactionExecutionStatus).indexOf(TransactionExecutionStatus.Success);
   expect(versionedTx.executionStatus).toEqual(executionStatusIndex);
   expect(Number(versionedTx?.executedAt)).toBeLessThan(new Date().getTime() / 1000);
+});
+
+test("executeVersionedTransaction, with ephemeralSigner token creation and governance as mint authority", async () => {
+	const bufferIndex = 0;
+	// Arrange
+	let realm = await BenchBuilder.withConnection(PROGRAM_VERSION_V3)
+		.then((b) => b.withWallet())
+		.then((b) => b.withRealm())
+		.then((b) => b.withCommunityMember())
+		.then((b) => b.withGovernance())
+		.then((b) => b.withNativeTreasury())
+		.then((b) => b.sendTx());
+
+	// fund the treasury account
+	await realm.bench.connection.requestAirdrop(realm.treasuryPk!, LAMPORTS_PER_SOL * 10);
+
+	realm = await realm.withProposal().then((b) => b.sendTx());
+
+	let instructions: TransactionInstruction[] = [];
+	const optionIndex = 0;
+	const ephemeralSigners = 1;
+	const transactionIndex = 0;
+	const proposalVersionedTxAddress = await getProposalVersionedTransactionAddress(
+		realm.bench.programId,
+		realm.proposalPk,
+		optionIndex,
+		transactionIndex,
+	);
+
+	const [customMintKeyEphermalSigner, ephemeralSignerBump] = getEphemeralSignerPda({
+		transactionProposalPda: proposalVersionedTxAddress,
+		transactionIndex,
+		ephemeralSignerIndex: 0,
+		programId: realm.bench.programId,
+	});
+
+	await withCreateMintCustomMint(
+		realm.bench.connection,
+		instructions,
+		customMintKeyEphermalSigner,
+		realm.governancePk,
+		realm.governancePk,
+		6,
+		realm.treasuryPk!,
+	);
+
+	const ataPk = await withCreateAssociatedTokenAccount(
+		instructions,
+		customMintKeyEphermalSigner,
+		realm.treasuryPk!,
+		realm.treasuryPk!,
+		TOKEN_PROGRAM_ID,
+		true,
+	);
+
+	await withMintTo(instructions, customMintKeyEphermalSigner, ataPk, realm.governancePk, 1 * LAMPORTS_PER_SOL);
+
+	const testTransferMessage = new TransactionMessage({
+		payerKey: realm.treasuryPk!,
+		recentBlockhash: PublicKey.default.toString(),
+		instructions: instructions,
+	});
+
+	// Serialize the message. Must be done with this util function
+	const messageBuffer = transactionMessageToRealmsTransactionMessageBytes({
+		message: testTransferMessage,
+		addressLookupTableAccounts: [],
+	});
+
+	const messageHash = crypto.createHash("sha256").update(messageBuffer).digest();
+
+	await realm
+		.withTransactionBuffer(bufferIndex, messageHash, messageBuffer.length, messageBuffer)
+		.then((b) => b.sendTx());
+
+	// Assert
+	const transactionBuffer = await realm.getTransactionBuffer(realm.proposalTransactionBufferPk);
+	if (!transactionBuffer) throw Error("No transaction buffer found");
+	expect(transactionBuffer.buffer.length).toEqual(messageBuffer.length);
+	expect(transactionBuffer.finalBufferHash).toEqual(Uint8Array.from(messageHash));
+
+	// Act
+	await realm
+		.withVersionedTransactionFromBuffer(optionIndex, ephemeralSigners, transactionIndex, bufferIndex)
+		.then((b) => b.sendTx());
+
+	await realm
+		.withProposalSignOff()
+		.then((b) => b.withCastVote())
+		.then((b) => b.sendTx());
+
+	// Assert
+	await new Promise((f) => setTimeout(f, 2000));
+
+	await realm.executeVersionedTransaction([ephemeralSignerBump]).then((b) => b.sendTx());
+
+	const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
+	if (!versionedTx) throw Error("No versioned transaction found");
+
+	const executionStatusIndex = Object.values(TransactionExecutionStatus).indexOf(TransactionExecutionStatus.Success);
+	expect(versionedTx.executionStatus).toEqual(executionStatusIndex);
+	expect(Number(versionedTx?.executedAt)).toBeLessThan(new Date().getTime() / 1000);
+});
+
+
+test("executeVersionedTransaction, with ephemeralSigner token creation and treasury as mint authority", async () => {
+	const bufferIndex = 0;
+	// Arrange
+	let realm = await BenchBuilder.withConnection(PROGRAM_VERSION_V3)
+		.then((b) => b.withWallet())
+		.then((b) => b.withRealm())
+		.then((b) => b.withCommunityMember())
+		.then((b) => b.withGovernance())
+		.then((b) => b.withNativeTreasury())
+		.then((b) => b.sendTx());
+
+	// fund the treasury account
+	await realm.bench.connection.requestAirdrop(realm.treasuryPk!, LAMPORTS_PER_SOL * 10);
+
+	realm = await realm.withProposal().then((b) => b.sendTx());
+
+	let instructions: TransactionInstruction[] = [];
+	const optionIndex = 0;
+	const ephemeralSigners = 1;
+	const transactionIndex = 0;
+	const proposalVersionedTxAddress = await getProposalVersionedTransactionAddress(
+		realm.bench.programId,
+		realm.proposalPk,
+		optionIndex,
+		transactionIndex,
+	);
+
+	const [customMintKeyEphermalSigner, ephemeralSignerBump] = getEphemeralSignerPda({
+		transactionProposalPda: proposalVersionedTxAddress,
+		transactionIndex,
+		ephemeralSignerIndex: 0,
+		programId: realm.bench.programId,
+	});
+
+	await withCreateMintCustomMint(
+		realm.bench.connection,
+		instructions,
+		customMintKeyEphermalSigner,
+		realm.treasuryPk!,
+		realm.treasuryPk!,
+		6,
+		realm.treasuryPk!,
+	);
+
+	const ataPk = await withCreateAssociatedTokenAccount(
+		instructions,
+		customMintKeyEphermalSigner,
+		realm.treasuryPk!,
+		realm.treasuryPk!,
+		TOKEN_PROGRAM_ID,
+		true,
+	);
+
+	await withMintTo(instructions, customMintKeyEphermalSigner, ataPk, realm.treasuryPk!, 1 * LAMPORTS_PER_SOL);
+
+	const testTransferMessage = new TransactionMessage({
+		payerKey: realm.treasuryPk!,
+		recentBlockhash: PublicKey.default.toString(),
+		instructions: instructions,
+	});
+
+	// Serialize the message. Must be done with this util function
+	const messageBuffer = transactionMessageToRealmsTransactionMessageBytes({
+		message: testTransferMessage,
+		addressLookupTableAccounts: [],
+	});
+
+	const messageHash = crypto.createHash("sha256").update(messageBuffer).digest();
+
+	await realm
+		.withTransactionBuffer(bufferIndex, messageHash, messageBuffer.length, messageBuffer)
+		.then((b) => b.sendTx());
+
+	// Assert
+	const transactionBuffer = await realm.getTransactionBuffer(realm.proposalTransactionBufferPk);
+	if (!transactionBuffer) throw Error("No transaction buffer found");
+	expect(transactionBuffer.buffer.length).toEqual(messageBuffer.length);
+	expect(transactionBuffer.finalBufferHash).toEqual(Uint8Array.from(messageHash));
+
+	// Act
+	await realm
+		.withVersionedTransactionFromBuffer(optionIndex, ephemeralSigners, transactionIndex, bufferIndex)
+		.then((b) => b.sendTx());
+
+	await realm
+		.withProposalSignOff()
+		.then((b) => b.withCastVote())
+		.then((b) => b.sendTx());
+
+	// Assert
+	await new Promise((f) => setTimeout(f, 2000));
+
+	await realm.executeVersionedTransaction([ephemeralSignerBump]).then((b) => b.sendTx());
+
+	const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
+	if (!versionedTx) throw Error("No versioned transaction found");
+
+	const executionStatusIndex = Object.values(TransactionExecutionStatus).indexOf(TransactionExecutionStatus.Success);
+	expect(versionedTx.executionStatus).toEqual(executionStatusIndex);
+	expect(Number(versionedTx?.executedAt)).toBeLessThan(new Date().getTime() / 1000);
 });

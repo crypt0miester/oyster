@@ -45,26 +45,19 @@ export function isSignerIndex(message: ProposalTransactionMessage, index: number
 export function transactionMessageToRealmsTransactionMessageBytes({
 	message,
 	addressLookupTableAccounts,
-	governancePk,
-	treasuryPk,
 }: {
 	message: TransactionMessage;
 	addressLookupTableAccounts?: AddressLookupTableAccount[];
-	governancePk: PublicKey;
-	treasuryPk: PublicKey;
 }): Uint8Array {
 	// Make sure authority is marked as non-signer in all instructions,
 	// otherwise the message will be serialized in incorrect format.
-	for (const instruction of message.instructions) {
-		for (const key of instruction.keys) {
-			if (key.pubkey.equals(governancePk)) {
-				key.isSigner = false;
-			}
-			if (key.pubkey.equals(treasuryPk)) {
-				key.isSigner = false;
-			}
-		}
-	}
+	// for (const instruction of message.instructions) {
+	// 	for (const key of instruction.keys) {
+	// 		if (key.pubkey.equals(treasuryPk)) {
+	// 			key.isSigner = false;
+	// 		}
+	// 	}
+	// }
 
 	// Use custom implementation of `message.compileToV0Message` that allows instruction programIds
 	// to also be loaded from `addressLookupTableAccounts`.

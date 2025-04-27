@@ -42,7 +42,7 @@ export async function withCreateRealm(
 		configArgs,
 		name,
 	});
-	
+
 	const data = Buffer.from(serialize(getGovernanceInstructionSchema(programVersion), args));
 
 	const [realmAddress] = await PublicKey.findProgramAddress(
