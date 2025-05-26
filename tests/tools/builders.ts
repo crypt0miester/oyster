@@ -131,9 +131,10 @@ export class BenchBuilder {
 	async withRealm(
 		communityTokenConfig?: GoverningTokenConfigAccountArgs | undefined,
 		councilTokenConfig?: GoverningTokenConfigAccountArgs | undefined,
-		useToken2022?: boolean | undefined,
+		useToken2022Community?: boolean | undefined,
+		useToken2022Council?: boolean | undefined,
 	) {
-		return new RealmBuilder(this).withRealm(communityTokenConfig, councilTokenConfig, useToken2022);
+		return new RealmBuilder(this).withRealm(communityTokenConfig, councilTokenConfig, useToken2022Community, useToken2022Council);
 	}
 }
 
@@ -162,7 +163,8 @@ export class RealmBuilder {
 	async withRealm(
 		communityTokenConfig?: GoverningTokenConfigAccountArgs | undefined,
 		councilTokenConfig?: GoverningTokenConfigAccountArgs | undefined,
-		useToken2022?: boolean | undefined,
+		useToken2022Community?: boolean | undefined,
+		useToken2022Council?: boolean | undefined,
 	) {
 		const name = `Realm-${new Keypair().publicKey.toBase58().slice(0, 6)}`;
 		this.realmAuthorityPk = this.bench.walletPk;
@@ -176,7 +178,7 @@ export class RealmBuilder {
 			this.bench.walletPk,
 			0,
 			this.bench.walletPk,
-			useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+			useToken2022Community ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
 		);
 
 		// Create council
@@ -188,7 +190,7 @@ export class RealmBuilder {
 			this.bench.walletPk,
 			0,
 			this.bench.walletPk,
-			useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+			useToken2022Council ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
 		);
 
 		const communityMintMaxVoteWeightSource = MintMaxVoteWeightSource.FULL_SUPPLY_FRACTION;
@@ -206,7 +208,8 @@ export class RealmBuilder {
 			new BN(1),
 			communityTokenConfig,
 			councilTokenConfig,
-			useToken2022 ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+			useToken2022Community ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
+			useToken2022Council ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID,
 		);
 
 		return this;
