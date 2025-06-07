@@ -1,0 +1,1 @@
+{"version":3,"file":"withExtendTransactionBuffer.d.ts","sourceRoot":"","sources":["../../src/governance/withExtendTransactionBuffer.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,SAAS,EAAE,sBAAsB,EAAE,MAAM,iBAAiB,CAAC;AAWzE,eAAO,MAAM,2BAA2B,GACvC,cAAc,sBAAsB,EAAE,EACtC,WAAW,SAAS,EACpB,YAAY,SAAS,EACrB,UAAU,SAAS,EACnB,SAAS,SAAS,EAClB,aAAa,MAAM,EACnB,QAAQ,UAAU,cAqBlB,CAAC"}

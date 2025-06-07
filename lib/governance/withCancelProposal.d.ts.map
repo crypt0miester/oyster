@@ -1,0 +1,1 @@
+{"version":3,"file":"withCancelProposal.d.ts","sourceRoot":"","sources":["../../src/governance/withCancelProposal.ts"],"names":[],"mappings":"AAAA,OAAO,EAAoB,KAAK,SAAS,EAAuB,sBAAsB,EAAE,MAAM,iBAAiB,CAAC;AAMhH,eAAO,MAAM,kBAAkB,GAC9B,cAAc,sBAAsB,EAAE,EACtC,WAAW,SAAS,EACpB,gBAAgB,MAAM,EACtB,OAAO,SAAS,EAChB,YAAY,SAAS,EACrB,UAAU,SAAS,EACnB,qBAAqB,SAAS,EAC9B,qBAAqB,SAAS,SAuD9B,CAAC"}

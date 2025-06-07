@@ -1,0 +1,3 @@
+import { type PublicKey, TransactionInstruction } from "@solana/web3.js";
+export declare const withCreateTransactionBuffer: (instructions: TransactionInstruction[], programId: PublicKey, governance: PublicKey, proposal: PublicKey, tokenOwnerRecord: PublicKey, governanceAuthority: PublicKey, payer: PublicKey, bufferIndex: number, finalBufferHash: Uint8Array, finalBufferSize: number, buffer: Uint8Array) => PublicKey;
+//# sourceMappingURL=withCreateTransactionBuffer.d.ts.map

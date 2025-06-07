@@ -1,0 +1,3 @@
+import { type PublicKey, TransactionInstruction } from "@solana/web3.js";
+export declare const withInsertVersionedTransactionFromBuffer: (instructions: TransactionInstruction[], programId: PublicKey, governance: PublicKey, proposal: PublicKey, tokenOwnerRecord: PublicKey, governanceAuthority: PublicKey, payer: PublicKey, optionIndex: number, ephemeralSigners: number, transactionIndex: number, bufferIndex: number) => PublicKey;
+//# sourceMappingURL=withInsertVersionedTransactionFromBuffer.d.ts.map

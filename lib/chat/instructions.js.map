@@ -1,0 +1,1 @@
+{"version":3,"file":"instructions.js","sourceRoot":"","sources":["../../src/chat/instructions.ts"],"names":[],"mappings":";;;AAEA,IAAY,yBAEX;AAFD,WAAY,yBAAyB;IACpC,uFAAe,CAAA;AAChB,CAAC,EAFW,yBAAyB,yCAAzB,yBAAyB,QAEpC;AAED,MAAa,mBAAmB;IAI/B,YAAY,IAA+B;QAH3C,gBAAW,GAA8B,yBAAyB,CAAC,WAAW,CAAC;QAI9E,IAAI,CAAC,IAAI,GAAG,IAAI,CAAC,IAAI,CAAC;IACvB,CAAC;CACD;AAPD,kDAOC"}

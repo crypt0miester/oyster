@@ -1,0 +1,1 @@
+{"version":3,"file":"withCreateTokenOwnerRecord.d.ts","sourceRoot":"","sources":["../../src/governance/withCreateTokenOwnerRecord.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,SAAS,EAAE,sBAAsB,EAAE,MAAM,iBAAiB,CAAC;AAOzE,eAAO,MAAM,0BAA0B,GACtC,cAAc,sBAAsB,EAAE,EACtC,WAAW,SAAS,EACpB,gBAAgB,MAAM,EACtB,OAAO,SAAS,EAChB,qBAAqB,SAAS,EAC9B,oBAAoB,SAAS,EAC7B,OAAO,SAAS,uBAsDhB,CAAC"}

@@ -1,0 +1,1 @@
+{"version":3,"file":"withFlagTransactionError.d.ts","sourceRoot":"","sources":["../../src/governance/withFlagTransactionError.ts"],"names":[],"mappings":"AAAA,OAAO,EAAE,KAAK,SAAS,EAAuB,sBAAsB,EAAE,MAAM,iBAAiB,CAAC;AAM9F,eAAO,MAAM,wBAAwB,GACpC,cAAc,sBAAsB,EAAE,EACtC,WAAW,SAAS,EACpB,gBAAgB,MAAM,EACtB,UAAU,SAAS,EACnB,kBAAkB,SAAS,EAC3B,qBAAqB,SAAS,EAC9B,qBAAqB,SAAS,SA0C9B,CAAC"}

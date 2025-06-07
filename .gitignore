@@ -1,7 +1,5 @@
 node_modules/
 build/
-dist/
-lib/
 deploy/
 docs/lockup-ui/
 .DS_Store

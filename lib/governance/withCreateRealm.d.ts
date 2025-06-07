@@ -1,0 +1,5 @@
+import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { type MintMaxVoteWeightSource, type GoverningTokenConfigAccountArgs } from "./accounts";
+import type BN from "bn.js";
+export declare function withCreateRealm(instructions: TransactionInstruction[], programId: PublicKey, programVersion: number, name: string, realmAuthority: PublicKey, communityMint: PublicKey, payer: PublicKey, councilMint: PublicKey | undefined, communityMintMaxVoteWeightSource: MintMaxVoteWeightSource, minCommunityWeightToCreateGovernance: BN, communityTokenConfig?: GoverningTokenConfigAccountArgs | undefined, councilTokenConfig?: GoverningTokenConfigAccountArgs | undefined, communityTokenProgram?: PublicKey, councilTokenProgram?: PublicKey): Promise<PublicKey>;
+//# sourceMappingURL=withCreateRealm.d.ts.map
