@@ -98,12 +98,12 @@ export async function accountsForTransactionExecute({
 	governancePk,
 	treasuryPk,
 	message,
-	ephemeralSignerBumps,
+	ephemeralSignerCount,
 	programId,
 }: {
 	connection: Connection;
 	message: ProposalTransactionMessage;
-	ephemeralSignerBumps: number[];
+	ephemeralSignerCount: number;
 	transactionIndex: number;
 	governancePk: PublicKey;
 	treasuryPk: PublicKey;
@@ -115,7 +115,7 @@ export async function accountsForTransactionExecute({
 	/** Address lookup table accounts used in the `message`. */
 	lookupTableAccounts: AddressLookupTableAccount[];
 }> {
-	const ephemeralSignerPdas = ephemeralSignerBumps.map((_, additionalSignerIndex) => {
+	const ephemeralSignerPdas = Array.from({ length: ephemeralSignerCount }, (_, additionalSignerIndex) => {
 		return getEphemeralSignerPda({
 			transactionProposalPda,
 			transactionIndex,

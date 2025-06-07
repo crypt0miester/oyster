@@ -5,7 +5,7 @@ import { InsertVersionedTransactionFromBufferArgs } from "./instructions";
 import { getProposalTransactionBufferAddress, getProposalVersionedTransactionAddress } from "./accounts";
 import { SYSTEM_PROGRAM_ID } from "../tools";
 
-export const withInsertVersionedTransactionFromBuffer = async (
+export const withInsertVersionedTransactionFromBuffer = (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	governance: PublicKey,
@@ -26,18 +26,13 @@ export const withInsertVersionedTransactionFromBuffer = async (
 	});
 	const data = Buffer.from(serialize(GOVERNANCE_INSTRUCTION_SCHEMA_V3, args));
 
-	const proposalVersionedTxAddress = await getProposalVersionedTransactionAddress(
+	const proposalVersionedTxAddress = getProposalVersionedTransactionAddress(
 		programId,
 		proposal,
 		optionIndex,
 		transactionIndex,
 	);
-	const proposalTransactionBufferAddress = await getProposalTransactionBufferAddress(
-		programId,
-		proposal,
-		payer,
-		bufferIndex,
-	);
+	const proposalTransactionBufferAddress = getProposalTransactionBufferAddress(programId, proposal, payer, bufferIndex);
 
 	const keys = [
 		{ pubkey: governance, isWritable: false, isSigner: false },

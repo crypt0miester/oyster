@@ -779,7 +779,7 @@ test("executeVersionedTransaction, with ephemeralSigner token creation and gover
 	// Assert
 	await new Promise((f) => setTimeout(f, 2000));
 
-	await realm.executeVersionedTransaction([ephemeralSignerBump]).then((b) => b.sendTx());
+	await realm.executeVersionedTransaction(1).then((b) => b.sendTx());
 
 	const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
 	if (!versionedTx) throw Error("No versioned transaction found");
@@ -881,7 +881,7 @@ test("executeVersionedTransaction, with ephemeralSigner token creation and treas
 	// Assert
 	await new Promise((f) => setTimeout(f, 2000));
 
-	await realm.executeVersionedTransaction([ephemeralSignerBump]).then((b) => b.sendTx());
+	await realm.executeVersionedTransaction(1).then((b) => b.sendTx());
 
 	const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
 	if (!versionedTx) throw Error("No versioned transaction found");
@@ -1018,9 +1018,7 @@ test("executeVersionedTransaction, with ephemeralSigner token creation, treasury
 	// Assert
 	await new Promise((f) => setTimeout(f, 2000));
 
-	await realm
-		.executeVersionedTransaction([ephemeralSignerBump])
-		.then((b) => b.sendTx(false, addressLookupTableAccounts));
+	await realm.executeVersionedTransaction(1).then((b) => b.sendTx(false, addressLookupTableAccounts));
 
 	const versionedTx = await realm.getVersionedTransactionProposal(realm.proposalVersionedTxPk);
 	if (!versionedTx) throw Error("No versioned transaction found");
@@ -1029,7 +1027,6 @@ test("executeVersionedTransaction, with ephemeralSigner token creation, treasury
 	expect(versionedTx.executionStatus).toEqual(executionStatusIndex);
 	expect(Number(versionedTx?.executedAt)).toBeLessThan(new Date().getTime() / 1000);
 });
-
 
 test("executeVersionedTransaction failure with luts alteration", async () => {
 	const bufferIndex = 0;
@@ -1149,9 +1146,7 @@ test("executeVersionedTransaction failure with luts alteration", async () => {
 		.withVersionedTransactionFromBuffer(optionIndex, ephemeralSigners, transactionIndex, bufferIndex)
 		.then((b) => b.sendTx());
 
-	await realm
-		.withProposalSignOff()
-		.then((b) => b.sendTx());
+	await realm.withProposalSignOff().then((b) => b.sendTx());
 	// Assert
 	await new Promise((f) => setTimeout(f, 2000));
 	const extendLutInstruction2 = AddressLookupTableProgram.extendLookupTable({
@@ -1166,6 +1161,6 @@ test("executeVersionedTransaction failure with luts alteration", async () => {
 	await realm.withCastVote().then((b) => b.sendTx());
 	await new Promise((f) => setTimeout(f, 2000));
 
-	const txBuilder = await realm.executeVersionedTransaction([ephemeralSignerBump]);
+	const txBuilder = await realm.executeVersionedTransaction(1);
 	await expect(txBuilder.sendTx(false, addressLookupTableAccounts)).rejects.toThrow();
 });

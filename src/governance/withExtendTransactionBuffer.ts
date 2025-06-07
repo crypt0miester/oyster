@@ -9,7 +9,7 @@ import { getProposalTransactionBufferAddress } from "./accounts";
 // by providing a new buffer of instructions. The buffer index indicates which
 // transaction buffer is being extended.
 // NOTE: This is only used when the transaction byte size exceeds the 800 byte safe limit
-export const withExtendTransactionBuffer = async (
+export const withExtendTransactionBuffer = (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	governance: PublicKey,
@@ -21,7 +21,7 @@ export const withExtendTransactionBuffer = async (
 	const args = new ExtendTransactionBufferArgs({ bufferIndex, buffer });
 	const data = Buffer.from(serialize(GOVERNANCE_INSTRUCTION_SCHEMA_V3, args));
 
-	const proposalTransactionBufferAddress = await getProposalTransactionBufferAddress(
+	const proposalTransactionBufferAddress = getProposalTransactionBufferAddress(
 		programId,
 		proposal,
 		creator,

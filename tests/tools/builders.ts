@@ -134,7 +134,12 @@ export class BenchBuilder {
 		useToken2022Community?: boolean | undefined,
 		useToken2022Council?: boolean | undefined,
 	) {
-		return new RealmBuilder(this).withRealm(communityTokenConfig, councilTokenConfig, useToken2022Community, useToken2022Council);
+		return new RealmBuilder(this).withRealm(
+			communityTokenConfig,
+			councilTokenConfig,
+			useToken2022Community,
+			useToken2022Council,
+		);
 	}
 }
 
@@ -654,7 +659,7 @@ export class RealmBuilder {
 		return this;
 	}
 
-	async executeVersionedTransaction(ephemeralSignerBumps: number[] = []) {
+	async executeVersionedTransaction(ephemeralSignerCount = 0) {
 		const versionedTransaction = await this.getVersionedTransactionProposal(this.proposalVersionedTxPk);
 		const { accountMetas, lookupTableAccounts: _lookupTableAccounts } = await accountsForTransactionExecute({
 			connection: this.bench.connection,
@@ -663,7 +668,7 @@ export class RealmBuilder {
 			governancePk: this.governancePk,
 			treasuryPk: this.treasuryPk ?? this.communityMintPk,
 			message: versionedTransaction?.message!,
-			ephemeralSignerBumps,
+			ephemeralSignerCount,
 			programId: this.bench.programId,
 		});
 		await withExecuteVersionedTransaction(

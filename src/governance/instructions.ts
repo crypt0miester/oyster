@@ -9,7 +9,7 @@ export enum GovernanceInstruction {
 	WithdrawGoverningTokens = 2,
 	SetGovernanceDelegate = 3, // --
 	CreateGovernance = 4,
-	CreateProgramGovernance = 5,
+	CreateProgramGovernanceDeprecated = 5,
 
 	CreateProposal = 6,
 	AddSignatory = 7,
@@ -24,8 +24,8 @@ export enum GovernanceInstruction {
 	RelinquishVote = 15,
 	ExecuteTransaction = 16,
 
-	CreateMintGovernance = 17,
-	CreateTokenGovernance = 18,
+	CreateMintGovernanceDeprecated = 17,
+	CreateTokenGovernanceDeprecated = 18,
 	SetGovernanceConfig = 19,
 	FlagTransactionError = 20,
 	SetRealmAuthority = 21,
@@ -38,6 +38,7 @@ export enum GovernanceInstruction {
 	CompleteProposal = 28,
 	AddRequiredSignatory = 29,
 	RemoveRequiredSignatory = 30,
+
 	CreateTransactionBuffer = 31,
 	ExtendTransactionBuffer = 32,
 	CloseTransactionBuffer = 33,
@@ -81,7 +82,7 @@ export class CreateGovernanceArgs {
 }
 
 export class CreateProgramGovernanceArgs {
-	instruction: GovernanceInstruction = GovernanceInstruction.CreateProgramGovernance;
+	instruction: GovernanceInstruction = GovernanceInstruction.CreateProgramGovernanceDeprecated;
 	config: GovernanceConfig;
 	transferUpgradeAuthority: boolean;
 
@@ -95,7 +96,7 @@ export class CreateProgramGovernanceArgs {
 }
 
 export class CreateMintGovernanceArgs {
-	instruction: GovernanceInstruction = GovernanceInstruction.CreateMintGovernance;
+	instruction: GovernanceInstruction = GovernanceInstruction.CreateMintGovernanceDeprecated;
 	config: GovernanceConfig;
 	transferMintAuthorities: boolean;
 
@@ -109,7 +110,7 @@ export class CreateMintGovernanceArgs {
 }
 
 export class CreateTokenGovernanceArgs {
-	instruction: GovernanceInstruction = GovernanceInstruction.CreateTokenGovernance;
+	instruction: GovernanceInstruction = GovernanceInstruction.CreateTokenGovernanceDeprecated;
 	config: GovernanceConfig;
 	transferTokenOwner: boolean;
 

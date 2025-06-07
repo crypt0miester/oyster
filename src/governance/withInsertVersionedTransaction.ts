@@ -5,7 +5,7 @@ import { InsertVersionedTransactionArgs } from "./instructions";
 import { getProposalVersionedTransactionAddress } from "./accounts";
 import { SYSTEM_PROGRAM_ID } from "../tools";
 
-export const withInsertVersionedTransaction = async (
+export const withInsertVersionedTransaction = (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	governance: PublicKey,
@@ -26,7 +26,7 @@ export const withInsertVersionedTransaction = async (
 	});
 	const data = Buffer.from(serialize(GOVERNANCE_INSTRUCTION_SCHEMA_V3, args));
 
-	const proposalVersionedTxAddress = await getProposalVersionedTransactionAddress(
+	const proposalVersionedTxAddress = getProposalVersionedTransactionAddress(
 		programId,
 		proposal,
 		optionIndex,

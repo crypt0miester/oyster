@@ -1570,7 +1570,7 @@ export class ProposalVersionedTransaction {
 	}
 }
 
-export async function getProposalTransactionAddress(
+export function getProposalTransactionAddress(
 	programId: PublicKey,
 	programVersion: number,
 	proposal: PublicKey,
@@ -1588,7 +1588,7 @@ export async function getProposalTransactionAddress(
 			? [Buffer.from(GOVERNANCE_PROGRAM_SEED), proposal.toBuffer(), instructionIndexBuffer]
 			: [Buffer.from(GOVERNANCE_PROGRAM_SEED), proposal.toBuffer(), optionIndexBuffer, instructionIndexBuffer];
 
-	const [instructionAddress] = await PublicKey.findProgramAddress(seeds, programId);
+	const [instructionAddress] = PublicKey.findProgramAddressSync(seeds, programId);
 
 	return instructionAddress;
 }
@@ -1684,7 +1684,7 @@ export function getEphemeralSignerPda({
 	);
 }
 
-export async function getProposalVersionedTransactionAddress(
+export function getProposalVersionedTransactionAddress(
 	programId: PublicKey,
 	proposal: PublicKey,
 	optionIndex: number,
@@ -1698,12 +1698,12 @@ export async function getProposalVersionedTransactionAddress(
 
 	const seeds = [Buffer.from("version_transaction"), proposal.toBuffer(), optionIndexBuffer, transactionIndexBuffer];
 
-	const [instructionAddress] = await PublicKey.findProgramAddress(seeds, programId);
+	const [instructionAddress] = PublicKey.findProgramAddressSync(seeds, programId);
 
 	return instructionAddress;
 }
 
-export async function getProposalTransactionBufferAddress(
+export function getProposalTransactionBufferAddress(
 	programId: PublicKey,
 	proposal: PublicKey,
 	creator: PublicKey,
@@ -1714,7 +1714,7 @@ export async function getProposalTransactionBufferAddress(
 
 	const seeds = [Buffer.from("transaction_buffer"), proposal.toBuffer(), creator.toBuffer(), bufferIndexBuffer];
 
-	const [transactionBufferAddress] = await PublicKey.findProgramAddress(seeds, programId);
+	const [transactionBufferAddress] = PublicKey.findProgramAddressSync(seeds, programId);
 
 	return transactionBufferAddress;
 }

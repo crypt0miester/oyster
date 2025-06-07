@@ -5,7 +5,7 @@ import { CreateTransactionBufferArgs } from "./instructions";
 import { getProposalTransactionBufferAddress } from "./accounts";
 import { SYSTEM_PROGRAM_ID } from "../tools";
 
-export const withCreateTransactionBuffer = async (
+export const withCreateTransactionBuffer = (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	governance: PublicKey,
@@ -25,12 +25,7 @@ export const withCreateTransactionBuffer = async (
 		buffer,
 	});
 	const data = Buffer.from(serialize(GOVERNANCE_INSTRUCTION_SCHEMA_V3, args));
-	const proposalTransactionBufferAddress = await getProposalTransactionBufferAddress(
-		programId,
-		proposal,
-		payer,
-		bufferIndex,
-	);
+	const proposalTransactionBufferAddress = getProposalTransactionBufferAddress(programId, proposal, payer, bufferIndex);
 
 	const keys = [
 		{ pubkey: governance, isWritable: false, isSigner: false },

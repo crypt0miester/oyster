@@ -1099,7 +1099,7 @@ export async function getAccountMetasAndLookupTableAccountsForExecuteTransaction
 	governancePk: PublicKey,
 	treasuryPk: PublicKey,
 	programId: PublicKey,
-	ephemeralSignerBumps: number[],
+	ephemeralSignerCount: number,
 ): Promise<{
 	/** Account metas used in the `message`. */
 	accountMetas: AccountMeta[];
@@ -1114,7 +1114,7 @@ export async function getAccountMetasAndLookupTableAccountsForExecuteTransaction
 		governancePk,
 		treasuryPk,
 		message: versionedTransactionData?.message!,
-		ephemeralSignerBumps,
+		ephemeralSignerCount,
 		programId,
 	});
 }

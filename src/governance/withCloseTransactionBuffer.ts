@@ -4,7 +4,7 @@ import { serialize } from "borsh";
 import { CloseTransactionBufferArgs } from "./instructions";
 import { getProposalTransactionBufferAddress } from "./accounts";
 
-export const withCloseTransactionBuffer = async (
+export const withCloseTransactionBuffer = (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	governance: PublicKey,
@@ -17,7 +17,7 @@ export const withCloseTransactionBuffer = async (
 	const args = new CloseTransactionBufferArgs({ bufferIndex });
 	const data = Buffer.from(serialize(GOVERNANCE_INSTRUCTION_SCHEMA_V3, args));
 
-	const proposalTransactionBufferAddress = await getProposalTransactionBufferAddress(
+	const proposalTransactionBufferAddress = getProposalTransactionBufferAddress(
 		programId,
 		proposal,
 		beneficiary,

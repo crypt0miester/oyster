@@ -117,6 +117,50 @@ export const GovernanceError = [
 	"Invalid deposit_exempt_proposal_count", // InvalidDepositExemptProposalCount
 	"Invalid GoverningTokenMint not allowed to vote", // GoverningTokenMintNotAllowedToVote
 	"Invalid deposit Payer for ProposalDeposit", // InvalidDepositPayerForProposalDeposit
+	"Invalid State: Proposal is not in final state", // InvalidStateNotFinal
+	"Invalid state for proposal state transition to Completed", // InvalidStateToCompleteProposal
+
+	"Invalid number of vote choices", // InvalidNumberOfVoteChoices
+	"Ranked vote is not supported", // RankedVoteIsNotSupported
+	"Choice weight must be 100%", // ChoiceWeightMustBe100Percent
+	"Single choice only is allowed", // SingleChoiceOnlyIsAllowed
+	"At least single choice is required", // AtLeastSingleChoiceIsRequired
+	"Total vote weight must be 100%", // TotalVoteWeightMustBe100Percent
+	"Invalid multi choice proposal parameters", // InvalidMultiChoiceProposalParameters
+
+	"Invalid Governance for RequiredSignatory", // InvalidGovernanceForRequiredSignatory
+	"Signatory Record has already been created", // SignatoryRecordAlreadyExists
+
+	"Instruction has been removed", // InstructionDeprecated
+	"Proposal is missing required signatories", // MissingRequiredSignatories
+
+	"Mathematical Overflow", // MathematicalOverflow
+
+	"Invalid lookup table account owner", // InvalidLookupTableAccountOwner
+	"Invalid lookup table account key", // InvalidLookupTableAccountKey
+	"Invalid number of accounts in message", // InvalidNumberOfAccountsInMessage
+	"Invalid account found in message", // InvalidAccountFoundInMessage
+	"Invalid account signer found in message", // InvalidAccountSigner
+	"Invalid writable account found in message", // InvalidAccountWritable
+	"Invalid account found", // InvalidAccountFound
+	"Account in lookuptable is missing", // MissingAddressInLookuptable
+	"Account is protected, it cannot be passed into a CPI as writable", // ProtectedAccount
+	"TransactionMessage is malformed", // InvalidTransactionMessage
+	"Transaction buffer already exists", // TransactionBufferAlreadyExists
+	"Versioned Transaction already exists", // VersionedTransactionAlreadyExists
+	"Transaction buffer unauthorized extension", // TransactionBufferUnauthorizedExtension
+	"Versioned Transaction already removed", // VersionedTransactionAlreadyRemoved
+	"Final buffer exceeded 10128 bytes", // FinalBufferSizeExceeded
+	"Final message buffer hash doesnt match the expected hash", // FinalBufferHashMismatch
+	"Final buffer size mismatch", // FinalBufferSizeMismatch
+	"Invalid number of accounts in the address look up table account", // InvalidNumberOfAccounts
+	"Transaction buffer does not exist", // TransactionBufferDoesNotExist
+
+	"Invalid account type", // InvalidAccountType
+
+	"Transaction creator must sign", // TransactionCreatorMustSign
+
+	"Lookup Table Account has been extended after vote has started", // LookupTableAccountHasBeenAltered
 ] as const;
 
 export const TokenError = [
