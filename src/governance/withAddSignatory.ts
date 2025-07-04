@@ -34,16 +34,6 @@ export const withAddSignatory = async (
 			isSigner: false,
 		},
 		{
-			pubkey: tokenOwnerRecord,
-			isWritable: false,
-			isSigner: false,
-		},
-		{
-			pubkey: governanceAuthority,
-			isWritable: false,
-			isSigner: true,
-		},
-		{
 			pubkey: signatoryRecordAddress,
 			isWritable: true,
 			isSigner: false,
@@ -57,6 +47,16 @@ export const withAddSignatory = async (
 			pubkey: SYSTEM_PROGRAM_ID,
 			isSigner: false,
 			isWritable: false,
+		},
+		{
+			pubkey: tokenOwnerRecord,
+			isWritable: false,
+			isSigner: false,
+		},
+		{
+			pubkey: governanceAuthority,
+			isWritable: false,
+			isSigner: true,
 		},
 	];
 
