@@ -10,6 +10,7 @@ export const withAddSignatory = async (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	programVersion: number,
+	governance: PublicKey,
 	proposal: PublicKey,
 	tokenOwnerRecord: PublicKey,
 	governanceAuthority: PublicKey,
@@ -22,6 +23,11 @@ export const withAddSignatory = async (
 	const signatoryRecordAddress = await getSignatoryRecordAddress(programId, proposal, signatory);
 
 	const keys = [
+		{
+			pubkey: governance,
+			isWritable: true,
+			isSigner: false,
+		},
 		{
 			pubkey: proposal,
 			isWritable: true,
