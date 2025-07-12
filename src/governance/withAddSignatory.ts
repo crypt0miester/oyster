@@ -21,6 +21,10 @@ export const withAddSignatory = async (
 	const data = Buffer.from(serialize(getGovernanceInstructionSchema(programVersion), args));
 
 	const signatoryRecordAddress = await getSignatoryRecordAddress(programId, proposal, signatory);
+	console.log("governance", governance.toString());
+	console.log("proposalAddress", proposal.toString());
+	console.log("signatory", signatory.toString());
+	console.log("signatoryRecordAddress", signatoryRecordAddress.toString());
 
 	const keys = [
 		{
