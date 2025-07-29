@@ -1,9 +1,8 @@
 {
-	"name": "@realms-today/spl-governance",
+	"name": "mythic-spl-governance",
 	"version": "0.4.0",
 	"description": "SPL Governance Client API",
-	"author": "Solana Maintainers <maintainers@solana.foundation>",
-	"homepage": "https://github.com/solana-labs/oyster/blob/main/packages/governance-sdk/README.md",
+	"homepage": "https://github.com/Mythic-Project/oyster/blob/main/README.md",
 	"license": "MIT",
 	"main": "lib/index.js",
 	"types": "lib/index.d.ts",
@@ -13,7 +12,7 @@
 	"files": ["lib"],
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/solana-labs/oyster.git"
+		"url": "git+https://github.com/Mythic-Project/oyster.git"
 	},
 	"sideEffects": false,
 	"scripts": {
@@ -25,7 +24,7 @@
 		"lint": "yarn biome lint --write ."
 	},
 	"bugs": {
-		"url": "https://github.com/solana-labs/oyster/issues"
+		"url": "https://github.com/Mythic-Project/oyster/issues"
 	},
 	"dependencies": {
 		"@solana/web3.js": "=1.98.0",
@@ -54,6 +53,9 @@
 			"^.+\\.tsx?$": "esbuild-jest"
 		},
 		"moduleFileExtensions": ["ts", "tsx", "js", "jsx", "json", "node"]
-	},
+	},  
+	"publishConfig": {
+    "access": "public"
+  },
 	"packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

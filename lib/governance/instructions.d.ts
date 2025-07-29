@@ -31,15 +31,13 @@ export declare enum GovernanceInstruction {
     RevokeGoverningTokens = 26,
     RefundProposalDeposit = 27,
     CompleteProposal = 28,
-    AddRequiredSignatory = 29,
-    RemoveRequiredSignatory = 30,
-    CreateTransactionBuffer = 31,
-    ExtendTransactionBuffer = 32,
-    CloseTransactionBuffer = 33,
-    InsertVersionedTransactionFromBuffer = 34,
-    InsertVersionedTransaction = 35,
-    ExecuteVersionedTransaction = 36,
-    RemoveVersionedTransaction = 37
+    CreateTransactionBuffer = 29,
+    ExtendTransactionBuffer = 30,
+    CloseTransactionBuffer = 31,
+    InsertVersionedTransactionFromBuffer = 32,
+    InsertVersionedTransaction = 33,
+    ExecuteVersionedTransaction = 34,
+    RemoveVersionedTransaction = 35
 }
 export declare class CreateRealmArgs {
     instruction: GovernanceInstruction;
