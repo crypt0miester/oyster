@@ -10,7 +10,6 @@ export const withAddSignatory = async (
 	instructions: TransactionInstruction[],
 	programId: PublicKey,
 	programVersion: number,
-	governance: PublicKey,
 	proposal: PublicKey,
 	tokenOwnerRecord: PublicKey,
 	governanceAuthority: PublicKey,
@@ -21,21 +20,21 @@ export const withAddSignatory = async (
 	const data = Buffer.from(serialize(getGovernanceInstructionSchema(programVersion), args));
 
 	const signatoryRecordAddress = await getSignatoryRecordAddress(programId, proposal, signatory);
-	console.log("governance", governance.toString());
-	console.log("proposalAddress", proposal.toString());
-	console.log("signatory", signatory.toString());
-	console.log("signatoryRecordAddress", signatoryRecordAddress.toString());
-
 	const keys = [
-		{
-			pubkey: governance,
-			isWritable: true,
-			isSigner: false,
-		},
 		{
 			pubkey: proposal,
 			isWritable: true,
 			isSigner: false,
+		},
+		{
+			pubkey: tokenOwnerRecord,
+			isWritable: false,
+			isSigner: false,
+		},
+		{
+			pubkey: governanceAuthority,
+			isWritable: false,
+			isSigner: true,
 		},
 		{
 			pubkey: signatoryRecordAddress,
@@ -51,16 +50,6 @@ export const withAddSignatory = async (
 			pubkey: SYSTEM_PROGRAM_ID,
 			isSigner: false,
 			isWritable: false,
-		},
-		{
-			pubkey: tokenOwnerRecord,
-			isWritable: false,
-			isSigner: false,
-		},
-		{
-			pubkey: governanceAuthority,
-			isWritable: false,
-			isSigner: true,
 		},
 	];
 

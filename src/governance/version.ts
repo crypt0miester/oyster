@@ -1,4 +1,4 @@
-import { type Connection, PublicKey, Transaction, type TransactionInstruction } from "@solana/web3.js";
+import { type Connection, PublicKey, Transaction, type TransactionInstruction, TransactionMessage, VersionedTransaction } from "@solana/web3.js";
 import BN from "bn.js";
 import { PROGRAM_VERSION, PROGRAM_VERSION_V1, PROGRAM_VERSION_V2 } from "../registry/constants";
 import { BN_ZERO } from "../tools/numbers";
@@ -53,11 +53,20 @@ export async function getGovernanceProgramVersion(connection: Connection, progra
 
 		await withUpdateProgramMetadata(instructions, programId, 2, walletPk);
 
-		const transaction = new Transaction({ feePayer: walletPk });
-		transaction.add(...instructions);
-
-		// TODO: Once return values are supported change the simulation call to the actual one
-		const getVersion = await connection.simulateTransaction(transaction);
+		const txnMessage = new VersionedTransaction(
+			new TransactionMessage({
+				payerKey: walletPk,
+				instructions: instructions,
+				recentBlockhash: PublicKey.default.toString(),
+			}).compileToV0Message()
+		)
+		const getVersion = await connection.simulateTransaction(
+			txnMessage,
+			{
+				sigVerify: false,
+				replaceRecentBlockhash: true,
+			}
+		);
 
 		if (getVersion.value.logs) {
 			const prefix = 'PROGRAM-VERSION:"';
