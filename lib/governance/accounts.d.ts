@@ -600,6 +600,9 @@ export declare class ProposalVersionedTransaction {
     hasError(): boolean;
     getAllSigners(): PublicKey[];
     getWritableAccounts(): PublicKey[];
+    private convertCompiledInstructionToInstructionData;
+    getAllInstructions(): InstructionData[];
+    getSingleInstruction(): InstructionData;
 }
 export declare function getProposalTransactionAddress(programId: PublicKey, programVersion: number, proposal: PublicKey, optionIndex: number, transactionIndex: number): PublicKey;
 export declare class ProgramMetadata {

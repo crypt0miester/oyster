@@ -1,6 +1,6 @@
 {
 	"name": "mythic-spl-governance",
-	"version": "0.4.1",
+	"version": "0.4.3",
 	"description": "SPL Governance Client API",
 	"homepage": "https://github.com/Mythic-Project/oyster/blob/main/README.md",
 	"license": "MIT",
@@ -27,7 +27,7 @@
 		"url": "https://github.com/Mythic-Project/oyster/issues"
 	},
 	"dependencies": {
-		"@solana/web3.js": "=1.98.0",
+		"@solana/web3.js": "^1.98.0",
 		"bignumber.js": "^9.0.1",
 		"bn.js": "^5.1.3",
 		"borsh": "^0.7.0",

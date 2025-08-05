@@ -1568,6 +1568,48 @@ export class ProposalVersionedTransaction {
 		const writableCount = this.message.getNumWritableSigners() + this.message.getNumWritableNonSigners();
 		return this.message.getAccountKeys().slice(0, writableCount);
 	}
+
+	private convertCompiledInstructionToInstructionData(
+		compiledInstruction: ProposalCompiledInstruction
+	): InstructionData {
+		const programId = this.message.accountKeys[compiledInstruction.programIdIndex];
+		
+		const accounts: AccountMetaData[] = compiledInstruction.accountIndexes.map(index => {
+			const pubkey = this.message.accountKeys[index];
+			const isSigner = index < this.message.numSigners;
+			const isWritable = index < this.message.numWritableSigners || 
+				(index >= this.message.numSigners && index < this.message.numSigners + this.message.numWritableNonSigners);
+			
+			return new AccountMetaData({
+				pubkey,
+				isSigner,
+				isWritable
+			});
+		});
+
+		return new InstructionData({
+			programId,
+			accounts,
+			data: compiledInstruction.data
+		});
+	}
+
+	getAllInstructions(): InstructionData[] {
+		return this.message.instructions.map(instruction => 
+			this.convertCompiledInstructionToInstructionData(instruction)
+		);
+	}
+
+	getSingleInstruction(): InstructionData {
+		if (this.message.instructions.length === 0) {
+			throw new Error("Transaction has no instructions");
+		}
+		if (this.message.instructions.length > 1) {
+			throw new Error("Transaction has multiple instructions");
+		}
+
+		return this.convertCompiledInstructionToInstructionData(this.message.instructions[0]);
+	}
 }
 
 export function getProposalTransactionAddress(
